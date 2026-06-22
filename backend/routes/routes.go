@@ -13,7 +13,7 @@ func ConfigurarRutas(r *gin.Engine) {
 		// Auth (publico)
 		api.POST("/auth/login", handlers.Login)
 
-		// Rutas protegidas - requieren token valido
+		// Rutas protegidas
 		protegidas := api.Group("/")
 		protegidas.Use(middleware.AuthRequired())
 		{
@@ -28,6 +28,13 @@ func ConfigurarRutas(r *gin.Engine) {
 			protegidas.GET("/clientes", handlers.ListarClientes)
 			protegidas.POST("/clientes", handlers.CrearCliente)
 			protegidas.GET("/clientes/:id/historial", handlers.HistorialCliente)
+
+			// Ventas (Vendedor y Gerente)
+			protegidas.POST("/ventas",
+				middleware.RolRequired("Vendedor", "Gerente"),
+				handlers.RegistrarVenta)
+			protegidas.GET("/ventas", handlers.ListarVentas)
+			protegidas.GET("/ventas/:id", handlers.DetallePedido)
 
 			// Dashboard (solo Gerente)
 			protegidas.GET("/dashboard/kpis",
