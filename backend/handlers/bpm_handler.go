@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"techstore-api/config"
 	"techstore-api/models"
@@ -8,15 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET /api/procesos-bpm - lista todos los procesos
 func ListarProcesosBPM(c *gin.Context) {
 	rows, err := config.DB.Query(`
 		SELECT b.id_proceso, b.id_proveedor, b.id_producto,
 		       p.nombre_producto, pr.razon_social,
 		       b.cantidad_solicitada, b.estado_proceso,
 		       TO_CHAR(b.fecha_inicio, 'YYYY-MM-DD'),
-		       NVL(TO_CHAR(b.fecha_aprobacion, 'YYYY-MM-DD'), ''),
-		       NVL(TO_CHAR(b.fecha_recepcion, 'YYYY-MM-DD'), ''),
+		       TO_CHAR(b.fecha_aprobacion, 'YYYY-MM-DD'),
+		       TO_CHAR(b.fecha_recepcion, 'YYYY-MM-DD'),
 		       b.activado_automaticamente
 		FROM PROCESO_BPM b
 		JOIN PRODUCTO p ON b.id_producto = p.id_producto
@@ -31,14 +31,21 @@ func ListarProcesosBPM(c *gin.Context) {
 	var lista []models.ProcesoBPM
 	for rows.Next() {
 		var b models.ProcesoBPM
+		var fechaAprobacion, fechaRecepcion sql.NullString
 		err := rows.Scan(&b.IDProceso, &b.IDProveedor, &b.IDProducto,
 			&b.NombreProducto, &b.NombreProveedor,
 			&b.CantidadSolicitada, &b.EstadoProceso,
-			&b.FechaInicio, &b.FechaAprobacion, &b.FechaRecepcion,
+			&b.FechaInicio, &fechaAprobacion, &fechaRecepcion,
 			&b.ActivadoAutomaticamente)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+		if fechaAprobacion.Valid {
+			b.FechaAprobacion = fechaAprobacion.String
+		}
+		if fechaRecepcion.Valid {
+			b.FechaRecepcion = fechaRecepcion.String
 		}
 		lista = append(lista, b)
 	}
@@ -50,7 +57,6 @@ func ListarProcesosBPM(c *gin.Context) {
 	c.JSON(http.StatusOK, lista)
 }
 
-// POST /api/procesos-bpm - generar orden manualmente
 func GenerarProcesoBPM(c *gin.Context) {
 	var req models.GenerarBPMRequest
 
@@ -72,7 +78,6 @@ func GenerarProcesoBPM(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"mensaje": "Proceso BPM generado exitosamente"})
 }
 
-// PUT /api/procesos-bpm/:id/aprobar - aprobar orden usando SP
 func AprobarProcesoBPM(c *gin.Context) {
 	idProceso := c.Param("id")
 	var req models.AprobarBPMRequest
@@ -96,11 +101,9 @@ func AprobarProcesoBPM(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"mensaje": "Proceso BPM aprobado exitosamente"})
 }
 
-// PUT /api/procesos-bpm/:id/recibir - confirmar recepcion de mercaderia
 func RecibirProcesoBPM(c *gin.Context) {
 	idProceso := c.Param("id")
 
-	// Obtener datos del proceso
 	var idProducto, cantidad int
 	err := config.DB.QueryRow(`
 		SELECT id_producto, cantidad_solicitada
@@ -112,7 +115,6 @@ func RecibirProcesoBPM(c *gin.Context) {
 		return
 	}
 
-	// Actualizar proceso a Recibido y sumar stock
 	tx, err := config.DB.Begin()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
