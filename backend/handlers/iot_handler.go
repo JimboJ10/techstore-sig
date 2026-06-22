@@ -56,7 +56,7 @@ func ListarLecturasIOT(c *gin.Context) {
 		SELECT l.id_lectura, l.id_dispositivo, l.id_producto,
 		       NVL(l.id_envio, 0), p.nombre_producto,
 		       l.codigo_leido, l.tipo_evento,
-		       TO_CHAR(l.fecha_lectura, 'YYYY-MM-DD HH24:MI:SS')
+		       TO_CHAR(l.fecha_lectura AT TIME ZONE 'America/Guayaquil', 'YYYY-MM-DD HH24:MI:SS')
 		FROM LECTURA_IOT l
 		JOIN PRODUCTO p ON l.id_producto = p.id_producto
 		ORDER BY l.fecha_lectura DESC`)
