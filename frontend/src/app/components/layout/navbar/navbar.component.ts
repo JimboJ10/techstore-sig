@@ -1,11 +1,36 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule
+  ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent {
+  usuario: string | null;
+  rol: string | null;
 
+  constructor(private authService: AuthService, private router: Router) {
+    this.usuario = this.authService.getUsuario();
+    this.rol = this.authService.getRol();
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
 }

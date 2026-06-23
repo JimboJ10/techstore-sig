@@ -1,0 +1,12 @@
+.layout-container {
+  display: flex;
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+}
+
+.main-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: #fafafa;
+}

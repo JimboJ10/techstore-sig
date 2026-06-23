@@ -52,10 +52,16 @@ func ConfigurarRutas(r *gin.Engine) {
 			protegidas.POST("/iot/lectura", handlers.RegistrarLecturaIOT)
 			protegidas.GET("/iot/lecturas", handlers.ListarLecturasIOT)
 
-			// Dashboard (solo Gerente)
+			// Dashboard
 			protegidas.GET("/dashboard/kpis",
 				middleware.RolRequired("Gerente"),
 				handlers.GetKPIs)
+			protegidas.GET("/dashboard/ventas-periodo",
+				middleware.RolRequired("Gerente"),
+				handlers.GetVentasPorPeriodo)
+			protegidas.GET("/dashboard/productos-top",
+				middleware.RolRequired("Gerente"),
+				handlers.GetProductosTop)
 		}
 	}
 }
