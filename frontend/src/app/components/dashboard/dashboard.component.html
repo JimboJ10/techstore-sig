@@ -1,1 +1,93 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+  <h2 class="page-title">Dashboard Gerencial</h2>
+
+  <div *ngIf="loading" class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  @if (!loading && kpis) {
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <mat-card class="kpi-card primary">
+        <mat-card-content>
+          <mat-icon>attach_money</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">${{ kpis.total_ventas_mes | number:'1.2-2' }}</span>
+            <span class="kpi-label">Ventas del mes</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card success">
+        <mat-card-content>
+          <mat-icon>shopping_bag</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ kpis.cantidad_pedidos }}</span>
+            <span class="kpi-label">Pedidos del mes</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card warning" [class.alert]="kpis.productos_criticos > 0">
+        <mat-card-content>
+          <mat-icon>warning</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ kpis.productos_criticos }}</span>
+            <span class="kpi-label">Stock crítico</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card info">
+        <mat-card-content>
+          <mat-icon>pending</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ kpis.pedidos_pendientes }}</span>
+            <span class="kpi-label">Pedidos pendientes</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card purple">
+        <mat-card-content>
+          <mat-icon>timer</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ kpis.tiempo_promedio_despacho }} min</span>
+            <span class="kpi-label">Tiempo prom. despacho</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card danger" [class.alert]="kpis.bpm_pendientes > 0">
+        <mat-card-content>
+          <mat-icon>receipt_long</mat-icon>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ kpis.bpm_pendientes }}</span>
+            <span class="kpi-label">BPM por aprobar</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-grid">
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Ventas últimos 30 días</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <canvas #ventasChart></canvas>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Productos más vendidos</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <canvas #productosChart></canvas>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>
