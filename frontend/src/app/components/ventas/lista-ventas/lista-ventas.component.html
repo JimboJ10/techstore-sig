@@ -1,1 +1,97 @@
-<p>lista-ventas works!</p>
+<div class="ventas-container">
+  <div class="page-header">
+    <h2 class="page-title">Historial de Ventas</h2>
+    <div class="header-actions">
+      <button mat-stroked-button color="primary" (click)="cargarVentas()">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+      <button mat-raised-button color="primary" routerLink="/ventas/pos">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Nueva Venta
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  @if (!loading) {
+    <div class="resumen-grid">
+      <mat-card class="resumen-card">
+        <mat-card-content>
+          <mat-icon color="primary">receipt</mat-icon>
+          <div>
+            <span class="resumen-valor">{{ ventas.length }}</span>
+            <span class="resumen-label">Total pedidos</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="resumen-card">
+        <mat-card-content>
+          <mat-icon style="color: #2e7d32">attach_money</mat-icon>
+          <div>
+            <span class="resumen-valor">${{ getTotalVentas() | number:'1.2-2' }}</span>
+            <span class="resumen-label">Total facturado</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="tabla-card">
+      <mat-card-header>
+        <mat-card-title>Pedidos registrados</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="ventas" class="full-width">
+
+          <ng-container matColumnDef="id_pedido">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let venta">{{ venta.id_pedido }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fecha_pedido">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let venta">{{ venta.fecha_pedido }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let venta">
+              <mat-chip [color]="getEstadoColor(venta.estado)" highlighted>
+                {{ venta.estado }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let venta">
+              <strong>${{ venta.total | number:'1.2-2' }}</strong>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let venta">
+              <button mat-icon-button color="primary"
+                      [matTooltip]="'Ver detalle #' + venta.id_pedido">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="ventas.length === 0" class="empty-state">
+          <mat-icon>receipt_long</mat-icon>
+          <p>No hay ventas registradas</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

@@ -1,0 +1,96 @@
+.pos-container {
+  padding: 0;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1565c0;
+  margin: 0;
+}
+
+.pos-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+}
+
+.form-card, .resumen-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.divider {
+  margin: 16px 0;
+}
+
+.btn-venta {
+  height: 48px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resumen-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  .resumen-label {
+    color: #666;
+    font-size: 14px;
+  }
+
+  .resumen-valor {
+    font-weight: 500;
+  }
+}
+
+.resumen-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  font-weight: 700;
+  font-size: 18px;
+
+  .total-valor {
+    font-size: 28px;
+    color: #1565c0;
+  }
+}
+
+.empty-resumen {
+  text-align: center;
+  padding: 48px 16px;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    display: block;
+    margin: 0 auto 16px;
+  }
+}

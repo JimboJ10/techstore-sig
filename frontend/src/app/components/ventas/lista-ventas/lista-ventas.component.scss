@@ -1,0 +1,88 @@
+.ventas-container {
+  padding: 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1565c0;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.resumen-card {
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px !important;
+  }
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .resumen-valor {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .resumen-label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+  }
+}
+
+.tabla-card {
+  mat-card-content {
+    padding: 0 !important;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    display: block;
+    margin: 0 auto 16px;
+  }
+}
