@@ -48,6 +48,9 @@ func ConfigurarRutas(r *gin.Engine) {
 				middleware.RolRequired("Gerente", "Bodeguero"),
 				handlers.RecibirProcesoBPM)
 
+			// Proveedor
+			protegidas.GET("/proveedores", handlers.ListarProveedores)
+
 			// IoT - Bodega
 			protegidas.POST("/iot/lectura", handlers.RegistrarLecturaIOT)
 			protegidas.GET("/iot/lecturas", handlers.ListarLecturasIOT)
