@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -8,19 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environment';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
-interface Pedido {
-  id_pedido: number;
-  id_cliente: number;
-  id_empleado: number;
-  fecha_pedido: string;
-  estado: string;
-  total: number;
-  observaciones: string;
-}
+import { Pedido, VentasService } from '../../../services/ventas.service';
 
 @Component({
   selector: 'app-lista-ventas',
@@ -42,30 +30,28 @@ interface Pedido {
 export class ListaVentasComponent implements OnInit {
   ventas: Pedido[] = [];
   loading = true;
+  error = '';
   displayedColumns = ['id_pedido', 'fecha_pedido', 'estado', 'total', 'acciones'];
-  private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private ventasService: VentasService) {}
 
   ngOnInit(): void {
     this.cargarVentas();
   }
 
-  private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Authorization': `Bearer ${this.authService.getToken()}`
-    });
-  }
-
   cargarVentas(): void {
     this.loading = true;
-    this.http.get<Pedido[]>(`${this.apiUrl}/ventas`,
-      { headers: this.getHeaders() }).subscribe({
+    this.error = '';
+
+    this.ventasService.listarVentas().subscribe({
       next: (data) => {
         this.ventas = data;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.error = 'No se pudieron cargar las ventas';
+        this.loading = false;
+      }
     });
   }
 

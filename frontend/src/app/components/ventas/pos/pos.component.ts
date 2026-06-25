@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,27 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environment';
-
-interface Producto {
-  id_producto: number;
-  nombre_producto: string;
-  precio_unitario: number;
-  codigo_barras: string;
-}
-
-interface Cliente {
-  id_cliente: number;
-  nombres: string;
-  apellidos: string;
-  correo: string;
-}
-
-interface MetodoPago {
-  id: number;
-  nombre: string;
-}
+import { Cliente, MetodoPago, Producto, VentasService } from '../../../services/ventas.service';
 
 @Component({
   selector: 'app-pos',
@@ -58,21 +37,15 @@ export class PosComponent implements OnInit {
   ventaForm: FormGroup;
   productos: Producto[] = [];
   clientes: Cliente[] = [];
-  metodosPago: MetodoPago[] = [
-    { id: 1, nombre: 'Efectivo' },
-    { id: 2, nombre: 'Tarjeta de crédito' },
-    { id: 3, nombre: 'Transferencia' }
-  ];
+  metodosPago: MetodoPago[] = [];
 
   productoSeleccionado: Producto | null = null;
   loading = false;
   subtotal = 0;
-  private apiUrl = environment.apiUrl;
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private authService: AuthService,
+    private ventasService: VentasService,
     private snackBar: MatSnackBar
   ) {
     this.ventaForm = this.fb.group({
@@ -86,6 +59,7 @@ export class PosComponent implements OnInit {
   ngOnInit(): void {
     this.cargarProductos();
     this.cargarClientes();
+    this.cargarMetodosPago();
 
     this.ventaForm.get('id_producto')?.valueChanges.subscribe(id => {
       this.productoSeleccionado = this.productos.find(p => p.id_producto === id) || null;
@@ -97,23 +71,24 @@ export class PosComponent implements OnInit {
     });
   }
 
-  private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Authorization': `Bearer ${this.authService.getToken()}`
-    });
-  }
-
   cargarProductos(): void {
-    this.http.get<Producto[]>(`${this.apiUrl}/productos`,
-      { headers: this.getHeaders() }).subscribe({
-      next: (data) => this.productos = data
+    this.ventasService.listarProductos().subscribe({
+      next: (data) => this.productos = data,
+      error: () => this.mostrarError('No se pudieron cargar los productos')
     });
   }
 
   cargarClientes(): void {
-    this.http.get<Cliente[]>(`${this.apiUrl}/clientes`,
-      { headers: this.getHeaders() }).subscribe({
-      next: (data) => this.clientes = data
+    this.ventasService.listarClientes().subscribe({
+      next: (data) => this.clientes = data,
+      error: () => this.mostrarError('No se pudieron cargar los clientes')
+    });
+  }
+
+  cargarMetodosPago(): void {
+    this.ventasService.listarMetodosPago().subscribe({
+      next: (data) => this.metodosPago = data,
+      error: () => this.mostrarError('No se pudieron cargar los metodos de pago')
     });
   }
 
@@ -121,25 +96,21 @@ export class PosComponent implements OnInit {
     if (this.productoSeleccionado) {
       const cantidad = this.ventaForm.get('cantidad')?.value || 0;
       this.subtotal = this.productoSeleccionado.precio_unitario * cantidad;
+      return;
     }
+
+    this.subtotal = 0;
   }
 
   registrarVenta(): void {
     if (this.ventaForm.invalid) return;
 
     this.loading = true;
-    const idEmpleado = 3;
 
-    const payload = {
-      ...this.ventaForm.value,
-      id_empleado: idEmpleado
-    };
-
-    this.http.post<any>(`${this.apiUrl}/ventas`, payload,
-      { headers: this.getHeaders() }).subscribe({
+    this.ventasService.registrarVenta(this.ventaForm.value).subscribe({
       next: (res) => {
         this.snackBar.open(
-          `✅ Venta registrada — Pedido #${res.id_pedido}`,
+          `Venta registrada - Pedido #${res.id_pedido}`,
           'Cerrar',
           { duration: 4000, panelClass: 'snack-success' }
         );
@@ -149,13 +120,13 @@ export class PosComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.snackBar.open(
-          '❌ Error al registrar la venta',
-          'Cerrar',
-          { duration: 4000, panelClass: 'snack-error' }
-        );
+        this.mostrarError(err?.error?.error || 'Error al registrar la venta');
         this.loading = false;
       }
     });
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', { duration: 4000, panelClass: 'snack-error' });
   }
 }

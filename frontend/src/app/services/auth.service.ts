@@ -11,6 +11,8 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  id_usuario: number;
+  id_empleado: number;
   nombre_usuario: string;
   rol: string;
 }
@@ -27,6 +29,8 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
         localStorage.setItem('token', response.token);
+        localStorage.setItem('id_usuario', response.id_usuario.toString());
+        localStorage.setItem('id_empleado', response.id_empleado.toString());
         localStorage.setItem('usuario', response.nombre_usuario);
         localStorage.setItem('rol', response.rol);
       })
@@ -35,6 +39,8 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('id_usuario');
+    localStorage.removeItem('id_empleado');
     localStorage.removeItem('usuario');
     localStorage.removeItem('rol');
     this.router.navigate(['/login']);
@@ -46,6 +52,11 @@ export class AuthService {
 
   getUsuario(): string | null {
     return localStorage.getItem('usuario');
+  }
+
+  getIdEmpleado(): number | null {
+    const id = localStorage.getItem('id_empleado');
+    return id ? Number(id) : null;
   }
 
   getRol(): string | null {

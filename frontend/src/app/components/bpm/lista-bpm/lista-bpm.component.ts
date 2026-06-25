@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -8,28 +7,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { BpmService, ProcesoBPM, Proveedor } from '../../../services/bpm.service';
+import { Producto } from '../../../services/ventas.service';
 import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environment';
-
-interface ProcesoBPM {
-  id_proceso: number;
-  id_proveedor: number;
-  id_producto: number;
-  nombre_producto: string;
-  nombre_proveedor: string;
-  cantidad_solicitada: number;
-  estado_proceso: string;
-  fecha_inicio: string;
-  fecha_aprobacion: string;
-  fecha_recepcion: string;
-  activado_automaticamente: number;
-}
 
 @Component({
   selector: 'app-lista-bpm',
@@ -58,17 +44,17 @@ export class ListaBpmComponent implements OnInit {
   loading = true;
   loadingAccion = false;
   mostrarFormulario = false;
+  error = '';
 
   nuevaOrdenForm: FormGroup;
-  productos: any[] = [];
-  proveedores: any[] = [];
+  productos: Producto[] = [];
+  proveedores: Proveedor[] = [];
 
   displayedColumns = ['id_proceso', 'producto', 'proveedor', 'cantidad',
                       'estado', 'fecha_inicio', 'tipo', 'acciones'];
-  private apiUrl = environment.apiUrl;
 
   constructor(
-    private http: HttpClient,
+    private bpmService: BpmService,
     private authService: AuthService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar
@@ -86,41 +72,33 @@ export class ListaBpmComponent implements OnInit {
     this.cargarProveedores();
   }
 
-  private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Authorization': `Bearer ${this.authService.getToken()}`
-    });
-  }
-
   cargarProcesos(): void {
     this.loading = true;
-    this.http.get<ProcesoBPM[]>(`${this.apiUrl}/procesos-bpm`,
-      { headers: this.getHeaders() }).subscribe({
+    this.error = '';
+
+    this.bpmService.listarProcesos().subscribe({
       next: (data) => {
         this.procesos = data;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.error = 'No se pudieron cargar los procesos BPM';
+        this.loading = false;
+      }
     });
   }
 
   cargarProductos(): void {
-    this.http.get<any[]>(`${this.apiUrl}/productos`,
-      { headers: this.getHeaders() }).subscribe({
-      next: (data) => this.productos = data
+    this.bpmService.listarProductos().subscribe({
+      next: (data) => this.productos = data,
+      error: () => this.mostrarError('No se pudieron cargar los productos')
     });
   }
 
   cargarProveedores(): void {
-    this.http.get<any[]>(`${this.apiUrl}/proveedores`,
-      { headers: this.getHeaders() }).subscribe({
+    this.bpmService.listarProveedores().subscribe({
       next: (data) => this.proveedores = data,
-      error: () => {
-        this.proveedores = [
-          { id_proveedor: 1, razon_social: 'TechDistrib S.A.' },
-          { id_proveedor: 2, razon_social: 'Global Tech Ecuador' }
-        ];
-      }
+      error: () => this.mostrarError('No se pudieron cargar los proveedores')
     });
   }
 
@@ -128,18 +106,16 @@ export class ListaBpmComponent implements OnInit {
     if (this.nuevaOrdenForm.invalid) return;
     this.loadingAccion = true;
 
-    this.http.post(`${this.apiUrl}/procesos-bpm`,
-      this.nuevaOrdenForm.value,
-      { headers: this.getHeaders() }).subscribe({
+    this.bpmService.generarOrden(this.nuevaOrdenForm.value).subscribe({
       next: () => {
-        this.snackBar.open('✅ Orden de compra generada', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('Orden de compra generada', 'Cerrar', { duration: 3000 });
         this.mostrarFormulario = false;
         this.nuevaOrdenForm.reset({ cantidad_solicitada: 10 });
         this.cargarProcesos();
         this.loadingAccion = false;
       },
-      error: () => {
-        this.snackBar.open('❌ Error al generar la orden', 'Cerrar', { duration: 3000 });
+      error: (err) => {
+        this.mostrarError(err?.error?.error || 'Error al generar la orden');
         this.loadingAccion = false;
       }
     });
@@ -147,16 +123,15 @@ export class ListaBpmComponent implements OnInit {
 
   aprobar(idProceso: number): void {
     this.loadingAccion = true;
-    this.http.put(`${this.apiUrl}/procesos-bpm/${idProceso}/aprobar`,
-      { id_empleado: 1 },
-      { headers: this.getHeaders() }).subscribe({
+
+    this.bpmService.aprobar(idProceso).subscribe({
       next: () => {
-        this.snackBar.open('✅ Proceso aprobado exitosamente', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('Proceso aprobado exitosamente', 'Cerrar', { duration: 3000 });
         this.cargarProcesos();
         this.loadingAccion = false;
       },
-      error: () => {
-        this.snackBar.open('❌ Error al aprobar', 'Cerrar', { duration: 3000 });
+      error: (err) => {
+        this.mostrarError(err?.error?.error || 'Error al aprobar');
         this.loadingAccion = false;
       }
     });
@@ -164,19 +139,30 @@ export class ListaBpmComponent implements OnInit {
 
   recibir(idProceso: number): void {
     this.loadingAccion = true;
-    this.http.put(`${this.apiUrl}/procesos-bpm/${idProceso}/recibir`,
-      {},
-      { headers: this.getHeaders() }).subscribe({
+
+    this.bpmService.recibir(idProceso).subscribe({
       next: () => {
-        this.snackBar.open('✅ Mercadería recibida, inventario actualizado', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('Mercaderia recibida, inventario actualizado', 'Cerrar', { duration: 3000 });
         this.cargarProcesos();
         this.loadingAccion = false;
       },
-      error: () => {
-        this.snackBar.open('❌ Error al confirmar recepción', 'Cerrar', { duration: 3000 });
+      error: (err) => {
+        this.mostrarError(err?.error?.error || 'Error al confirmar recepcion');
         this.loadingAccion = false;
       }
     });
+  }
+
+  puedeGenerar(): boolean {
+    return this.tieneRol(['Gerente', 'Administrador']);
+  }
+
+  puedeAprobar(): boolean {
+    return this.tieneRol(['Gerente']);
+  }
+
+  puedeRecibir(): boolean {
+    return this.tieneRol(['Gerente', 'Bodeguero']);
   }
 
   getEstadoColor(estado: string): string {
@@ -196,5 +182,13 @@ export class ListaBpmComponent implements OnInit {
 
   getAprobados(): number {
     return this.procesos.filter(p => p.estado_proceso === 'Aprobado').length;
+  }
+
+  private tieneRol(roles: string[]): boolean {
+    return roles.includes(this.authService.getRol() || '');
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', { duration: 4000, panelClass: 'snack-error' });
   }
 }

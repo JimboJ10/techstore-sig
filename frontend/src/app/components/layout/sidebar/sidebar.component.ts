@@ -25,7 +25,7 @@ export class SidebarComponent {
     { label: 'Inventario', icon: 'inventory', route: '/inventario', roles: ['Gerente', 'Administrador', 'Vendedor', 'Bodeguero'] },
     { label: 'Ventas', icon: 'point_of_sale', route: '/ventas', roles: ['Gerente', 'Vendedor'] },
     { label: 'POS', icon: 'shopping_cart', route: '/ventas/pos', roles: ['Vendedor', 'Gerente'] },
-    { label: 'BPM Compras', icon: 'receipt_long', route: '/bpm', roles: ['Gerente', 'Administrador'] },
+    { label: 'BPM Compras', icon: 'receipt_long', route: '/bpm', roles: ['Gerente', 'Administrador', 'Bodeguero'] },
     { label: 'Bodega IoT', icon: 'qr_code_scanner', route: '/bodega', roles: ['Bodeguero', 'Gerente'] }
   ];
 
