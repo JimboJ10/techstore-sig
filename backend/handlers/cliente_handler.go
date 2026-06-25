@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"techstore-api/config"
 	"techstore-api/models"
@@ -23,13 +24,21 @@ func ListarClientes(c *gin.Context) {
 	var clientes []models.Cliente
 	for rows.Next() {
 		var cl models.Cliente
+		var correo, telefono, direccion sql.NullString
 		err := rows.Scan(&cl.IDCliente, &cl.Nombres, &cl.Apellidos,
-			&cl.Correo, &cl.Telefono, &cl.Direccion)
+			&correo, &telefono, &direccion)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		cl.Correo = correo.String
+		cl.Telefono = telefono.String
+		cl.Direccion = direccion.String
 		clientes = append(clientes, cl)
+	}
+
+	if clientes == nil {
+		clientes = []models.Cliente{}
 	}
 
 	c.JSON(http.StatusOK, clientes)
@@ -65,7 +74,7 @@ func HistorialCliente(c *gin.Context) {
 	idCliente := c.Param("id")
 
 	rows, err := config.DB.Query(`
-		SELECT pe.id_pedido, pe.fecha_pedido, pe.estado, pe.total
+		SELECT pe.id_pedido, TO_CHAR(pe.fecha_pedido, 'YYYY-MM-DD'), pe.estado, pe.total
 		FROM PEDIDO pe
 		WHERE pe.id_cliente = :1
 		ORDER BY pe.fecha_pedido DESC`, idCliente)

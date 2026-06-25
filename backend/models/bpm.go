@@ -15,7 +15,7 @@ type ProcesoBPM struct {
 }
 
 type AprobarBPMRequest struct {
-	IDEmpleado int `json:"id_empleado" binding:"required"`
+	IDEmpleado int `json:"id_empleado,omitempty"`
 }
 
 type GenerarBPMRequest struct {

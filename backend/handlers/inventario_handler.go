@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"techstore-api/config"
 	"techstore-api/models"
@@ -25,13 +26,19 @@ func ListarInventario(c *gin.Context) {
 	var lista []models.Inventario
 	for rows.Next() {
 		var inv models.Inventario
+		var ubicacion sql.NullString
 		err := rows.Scan(&inv.IDInventario, &inv.IDProducto, &inv.NombreProducto,
-			&inv.StockActual, &inv.StockMinimo, &inv.StockMaximo, &inv.UbicacionBodega)
+			&inv.StockActual, &inv.StockMinimo, &inv.StockMaximo, &ubicacion)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		inv.UbicacionBodega = ubicacion.String
 		lista = append(lista, inv)
+	}
+
+	if lista == nil {
+		lista = []models.Inventario{}
 	}
 
 	c.JSON(http.StatusOK, lista)

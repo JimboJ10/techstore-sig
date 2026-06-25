@@ -18,26 +18,47 @@ func ConfigurarRutas(r *gin.Engine) {
 		protegidas.Use(middleware.AuthRequired())
 		{
 			// Productos
-			protegidas.GET("/productos", handlers.ListarProductos)
+			protegidas.GET("/productos",
+				middleware.RolRequired("Gerente", "Administrador", "Vendedor", "Bodeguero"),
+				handlers.ListarProductos)
 
 			// Inventario
-			protegidas.GET("/inventario", handlers.ListarInventario)
-			protegidas.GET("/inventario/alertas", handlers.AlertasStock)
+			protegidas.GET("/inventario",
+				middleware.RolRequired("Gerente", "Administrador", "Vendedor", "Bodeguero"),
+				handlers.ListarInventario)
+			protegidas.GET("/inventario/alertas",
+				middleware.RolRequired("Gerente", "Administrador", "Bodeguero"),
+				handlers.AlertasStock)
 
 			// Clientes
-			protegidas.GET("/clientes", handlers.ListarClientes)
-			protegidas.POST("/clientes", handlers.CrearCliente)
-			protegidas.GET("/clientes/:id/historial", handlers.HistorialCliente)
+			protegidas.GET("/clientes",
+				middleware.RolRequired("Gerente", "Vendedor"),
+				handlers.ListarClientes)
+			protegidas.POST("/clientes",
+				middleware.RolRequired("Gerente", "Vendedor"),
+				handlers.CrearCliente)
+			protegidas.GET("/clientes/:id/historial",
+				middleware.RolRequired("Gerente", "Vendedor"),
+				handlers.HistorialCliente)
 
 			// Ventas (Vendedor y Gerente)
+			protegidas.GET("/metodos-pago",
+				middleware.RolRequired("Vendedor", "Gerente"),
+				handlers.ListarMetodosPago)
 			protegidas.POST("/ventas",
 				middleware.RolRequired("Vendedor", "Gerente"),
 				handlers.RegistrarVenta)
-			protegidas.GET("/ventas", handlers.ListarVentas)
-			protegidas.GET("/ventas/:id", handlers.DetallePedido)
+			protegidas.GET("/ventas",
+				middleware.RolRequired("Vendedor", "Gerente"),
+				handlers.ListarVentas)
+			protegidas.GET("/ventas/:id",
+				middleware.RolRequired("Vendedor", "Gerente"),
+				handlers.DetallePedido)
 
 			// Proceso BPM (Gerente y Administrador)
-			protegidas.GET("/procesos-bpm", handlers.ListarProcesosBPM)
+			protegidas.GET("/procesos-bpm",
+				middleware.RolRequired("Gerente", "Administrador", "Bodeguero"),
+				handlers.ListarProcesosBPM)
 			protegidas.POST("/procesos-bpm",
 				middleware.RolRequired("Gerente", "Administrador"),
 				handlers.GenerarProcesoBPM)
@@ -49,11 +70,20 @@ func ConfigurarRutas(r *gin.Engine) {
 				handlers.RecibirProcesoBPM)
 
 			// Proveedor
-			protegidas.GET("/proveedores", handlers.ListarProveedores)
+			protegidas.GET("/proveedores",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.ListarProveedores)
 
 			// IoT - Bodega
-			protegidas.POST("/iot/lectura", handlers.RegistrarLecturaIOT)
-			protegidas.GET("/iot/lecturas", handlers.ListarLecturasIOT)
+			protegidas.GET("/envios/pendientes",
+				middleware.RolRequired("Bodeguero", "Gerente"),
+				handlers.ListarEnviosPendientes)
+			protegidas.POST("/iot/lectura",
+				middleware.RolRequired("Bodeguero", "Gerente"),
+				handlers.RegistrarLecturaIOT)
+			protegidas.GET("/iot/lecturas",
+				middleware.RolRequired("Bodeguero", "Gerente"),
+				handlers.ListarLecturasIOT)
 
 			// Dashboard
 			protegidas.GET("/dashboard/kpis",

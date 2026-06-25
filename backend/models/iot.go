@@ -14,5 +14,5 @@ type LecturaIOTRequest struct {
 	IDDispositivo int    `json:"id_dispositivo" binding:"required"`
 	CodigoBarras  string `json:"codigo_barras" binding:"required"`
 	IDEnvio       int    `json:"id_envio"`
-	TipoEvento    string `json:"tipo_evento" binding:"required"`
+	TipoEvento    string `json:"tipo_evento" binding:"required,oneof=Despacho Recepcion"`
 }

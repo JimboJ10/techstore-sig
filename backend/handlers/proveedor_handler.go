@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"techstore-api/config"
 
@@ -8,11 +9,11 @@ import (
 )
 
 type Proveedor struct {
-	IDProveedor  int    `json:"id_proveedor"`
-	RazonSocial  string `json:"razon_social"`
-	RUC          string `json:"ruc"`
-	Correo       string `json:"correo"`
-	Telefono     string `json:"telefono"`
+	IDProveedor    int    `json:"id_proveedor"`
+	RazonSocial    string `json:"razon_social"`
+	RUC            string `json:"ruc"`
+	Correo         string `json:"correo"`
+	Telefono       string `json:"telefono"`
 	ContactoNombre string `json:"contacto_nombre"`
 }
 
@@ -30,8 +31,17 @@ func ListarProveedores(c *gin.Context) {
 	var proveedores []Proveedor
 	for rows.Next() {
 		var p Proveedor
-		rows.Scan(&p.IDProveedor, &p.RazonSocial, &p.RUC,
-			&p.Correo, &p.Telefono, &p.ContactoNombre)
+		var ruc, correo, telefono, contacto sql.NullString
+		err := rows.Scan(&p.IDProveedor, &p.RazonSocial, &ruc,
+			&correo, &telefono, &contacto)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		p.RUC = ruc.String
+		p.Correo = correo.String
+		p.Telefono = telefono.String
+		p.ContactoNombre = contacto.String
 		proveedores = append(proveedores, p)
 	}
 

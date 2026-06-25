@@ -2,9 +2,8 @@ package models
 
 type PedidoRequest struct {
 	IDCliente  int `json:"id_cliente" binding:"required"`
-	IDEmpleado int `json:"id_empleado" binding:"required"`
 	IDProducto int `json:"id_producto" binding:"required"`
-	Cantidad   int `json:"cantidad" binding:"required"`
+	Cantidad   int `json:"cantidad" binding:"required,min=1"`
 	IDMetodo   int `json:"id_metodo_pago" binding:"required"`
 }
 

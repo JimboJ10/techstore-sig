@@ -20,17 +20,19 @@ func Login(c *gin.Context) {
 
 	var usuario models.Usuario
 	var nombreRol string
+	var idEmpleado int
 
 	query := `
 		SELECT u.id_usuario, u.id_rol, u.nombre_usuario, u.correo, 
-		       u.password_hash, u.activo, r.nombre_rol
+		       u.password_hash, u.activo, r.nombre_rol, e.id_empleado
 		FROM USUARIO u
 		JOIN ROL r ON u.id_rol = r.id_rol
+		JOIN EMPLEADO e ON e.id_usuario = u.id_usuario
 		WHERE u.correo = :1 AND u.activo = 1`
 
 	row := config.DB.QueryRow(query, req.Correo)
 	err := row.Scan(&usuario.IDUsuario, &usuario.IDRol, &usuario.NombreUsuario,
-		&usuario.Correo, &usuario.PasswordHash, &usuario.Activo, &nombreRol)
+		&usuario.Correo, &usuario.PasswordHash, &usuario.Activo, &nombreRol, &idEmpleado)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciales invalidas"})
@@ -43,7 +45,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := services.GenerarToken(usuario.IDUsuario, nombreRol)
+	token, err := services.GenerarToken(usuario.IDUsuario, idEmpleado, nombreRol)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generando token"})
 		return
@@ -51,6 +53,8 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.LoginResponse{
 		Token:         token,
+		IDUsuario:     usuario.IDUsuario,
+		IDEmpleado:    idEmpleado,
 		NombreUsuario: usuario.NombreUsuario,
 		Rol:           nombreRol,
 	})

@@ -9,15 +9,17 @@ import (
 var JwtSecret = []byte("techstore_sig_secret_key_2026_machala")
 
 type Claims struct {
-	IDUsuario int    `json:"id_usuario"`
-	Rol       string `json:"rol"`
+	IDUsuario  int    `json:"id_usuario"`
+	IDEmpleado int    `json:"id_empleado"`
+	Rol        string `json:"rol"`
 	jwt.RegisteredClaims
 }
 
-func GenerarToken(idUsuario int, rol string) (string, error) {
+func GenerarToken(idUsuario int, idEmpleado int, rol string) (string, error) {
 	claims := Claims{
-		IDUsuario: idUsuario,
-		Rol:       rol,
+		IDUsuario:  idUsuario,
+		IDEmpleado: idEmpleado,
+		Rol:        rol,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(8 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

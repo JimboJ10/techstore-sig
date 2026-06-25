@@ -33,6 +33,7 @@ func AuthRequired() gin.HandlerFunc {
 
 		// Guarda los datos del usuario en el contexto para usar en los handlers
 		c.Set("id_usuario", claims.IDUsuario)
+		c.Set("id_empleado", claims.IDEmpleado)
 		c.Set("rol", claims.Rol)
 
 		c.Next()

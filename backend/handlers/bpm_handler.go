@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 	"techstore-api/config"
 	"techstore-api/models"
 
@@ -80,10 +81,10 @@ func GenerarProcesoBPM(c *gin.Context) {
 
 func AprobarProcesoBPM(c *gin.Context) {
 	idProceso := c.Param("id")
-	var req models.AprobarBPMRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos invalidos"})
+	idEmpleado, ok := c.Get("id_empleado")
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{"error": "No se pudo verificar el empleado autenticado"})
 		return
 	}
 
@@ -91,9 +92,13 @@ func AprobarProcesoBPM(c *gin.Context) {
 		BEGIN
 			SP_APROBAR_PROCESO_BPM(:1, :2);
 		END;`,
-		idProceso, req.IDEmpleado)
+		idProceso, idEmpleado)
 
 	if err != nil {
+		if strings.Contains(err.Error(), "Solo se pueden aprobar") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Solo se pueden aprobar procesos en estado Generado"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -105,13 +110,19 @@ func RecibirProcesoBPM(c *gin.Context) {
 	idProceso := c.Param("id")
 
 	var idProducto, cantidad int
+	var estado string
 	err := config.DB.QueryRow(`
-		SELECT id_producto, cantidad_solicitada
+		SELECT id_producto, cantidad_solicitada, estado_proceso
 		FROM PROCESO_BPM WHERE id_proceso = :1`, idProceso).
-		Scan(&idProducto, &cantidad)
+		Scan(&idProducto, &cantidad, &estado)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Proceso no encontrado"})
+		return
+	}
+
+	if estado != "Aprobado" && estado != "Enviado" {
+		c.JSON(http.StatusConflict, gin.H{"error": "Solo se puede recibir mercaderia de procesos aprobados o enviados"})
 		return
 	}
 
@@ -124,7 +135,8 @@ func RecibirProcesoBPM(c *gin.Context) {
 	_, err = tx.Exec(`
 		UPDATE PROCESO_BPM
 		SET estado_proceso = 'Recibido', fecha_recepcion = SYSDATE
-		WHERE id_proceso = :1`, idProceso)
+		WHERE id_proceso = :1
+		AND estado_proceso IN ('Aprobado', 'Enviado')`, idProceso)
 	if err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

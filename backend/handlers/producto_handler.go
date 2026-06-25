@@ -10,8 +10,8 @@ import (
 
 func ListarProductos(c *gin.Context) {
 	rows, err := config.DB.Query(`
-		SELECT id_producto, id_categoria, id_marca, nombre_producto, 
-		       precio_unitario, codigo_barras, activo 
+		SELECT id_producto, id_categoria, id_marca, nombre_producto,
+		       precio_unitario, NVL(codigo_barras, ''), activo
 		FROM PRODUCTO 
 		WHERE activo = 1
 		ORDER BY id_producto`)
@@ -31,6 +31,10 @@ func ListarProductos(c *gin.Context) {
 			return
 		}
 		productos = append(productos, p)
+	}
+
+	if productos == nil {
+		productos = []models.Producto{}
 	}
 
 	c.JSON(http.StatusOK, productos)

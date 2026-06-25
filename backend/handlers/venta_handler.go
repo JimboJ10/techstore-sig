@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
+	"strings"
 	"techstore-api/config"
 	"techstore-api/models"
 
@@ -19,15 +20,25 @@ func RegistrarVenta(c *gin.Context) {
 		return
 	}
 
+	idEmpleado, ok := c.Get("id_empleado")
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{"error": "No se pudo verificar el empleado autenticado"})
+		return
+	}
+
 	var idPedido int
 	_, err := config.DB.Exec(`
 		BEGIN
 			SP_REGISTRAR_VENTA(:1, :2, :3, :4, :5, :6);
 		END;`,
-		req.IDCliente, req.IDEmpleado, req.IDProducto,
+		req.IDCliente, idEmpleado, req.IDProducto,
 		req.Cantidad, req.IDMetodo, sql.Out{Dest: &idPedido})
 
 	if err != nil {
+		if strings.Contains(err.Error(), "Stock insuficiente") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Stock insuficiente para registrar la venta"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -90,4 +101,39 @@ func DetallePedido(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, p)
+}
+
+type MetodoPago struct {
+	IDMetodoPago int    `json:"id_metodo_pago"`
+	NombreMetodo string `json:"nombre_metodo"`
+	Descripcion  string `json:"descripcion"`
+}
+
+// GET /api/metodos-pago - lista metodos configurados en Oracle
+func ListarMetodosPago(c *gin.Context) {
+	rows, err := config.DB.Query(`
+		SELECT id_metodo_pago, nombre_metodo, NVL(descripcion, '')
+		FROM METODO_PAGO
+		ORDER BY id_metodo_pago`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var metodos []MetodoPago
+	for rows.Next() {
+		var m MetodoPago
+		if err := rows.Scan(&m.IDMetodoPago, &m.NombreMetodo, &m.Descripcion); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		metodos = append(metodos, m)
+	}
+
+	if metodos == nil {
+		metodos = []MetodoPago{}
+	}
+
+	c.JSON(http.StatusOK, metodos)
 }
