@@ -53,12 +53,18 @@ func CrearCliente(c *gin.Context) {
 		return
 	}
 
+	if cl.Nombres == "" || cl.Apellidos == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nombres y apellidos son obligatorios"})
+		return
+	}
+
 	var idGenerado int
-	err := config.DB.QueryRow(`
+	_, err := config.DB.Exec(`
 		INSERT INTO CLIENTE (nombres, apellidos, correo, telefono, direccion)
 		VALUES (:1, :2, :3, :4, :5)
 		RETURNING id_cliente INTO :6`,
-		cl.Nombres, cl.Apellidos, cl.Correo, cl.Telefono, cl.Direccion).Scan(&idGenerado)
+		cl.Nombres, cl.Apellidos, cl.Correo, cl.Telefono, cl.Direccion,
+		sql.Out{Dest: &idGenerado})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

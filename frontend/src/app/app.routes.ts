@@ -44,6 +44,16 @@ export const routes: Routes = [
           import('./components/bodega/lecturas-iot/lecturas-iot.component').then(m => m.LecturasIotComponent)
       },
       {
+        path: 'clientes',
+        loadComponent: () =>
+          import('./components/clientes/clientes.component').then(m => m.ClientesComponent)
+      },
+      {
+        path: 'proveedores',
+        loadComponent: () =>
+          import('./components/proveedores/proveedores.component').then(m => m.ProveedoresComponent)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Producto } from './ventas.service';
+import { Proveedor } from './proveedores.service';
 
 export interface ProcesoBPM {
   id_proceso: number;
@@ -17,15 +18,6 @@ export interface ProcesoBPM {
   activado_automaticamente: number;
 }
 
-export interface Proveedor {
-  id_proveedor: number;
-  razon_social: string;
-  ruc: string;
-  correo: string;
-  telefono: string;
-  contacto_nombre: string;
-}
-
 export interface GenerarBpmRequest {
   id_proveedor: number;
   id_producto: number;
@@ -35,6 +27,9 @@ export interface GenerarBpmRequest {
 export interface MensajeResponse {
   mensaje: string;
 }
+
+// Re-exportamos Proveedor para que los componentes que ya lo importan desde aquí sigan funcionando
+export type { Proveedor };
 
 @Injectable({
   providedIn: 'root'
