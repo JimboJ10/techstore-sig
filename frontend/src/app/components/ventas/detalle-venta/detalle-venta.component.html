@@ -1,0 +1,40 @@
+<div class="detalle-container">
+  <div class="page-header">
+    <div class="header-left">
+      <button mat-icon-button routerLink="/ventas">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2 class="page-title">Detalle de Venta</h2>
+    </div>
+    <button mat-raised-button color="primary"
+            (click)="marcarEntregado()"
+            [disabled]="loadingAccion || !puedeEntregar()">
+      <mat-icon>done_all</mat-icon>
+      {{ loadingAccion ? 'Procesando...' : 'Marcar entregado' }}
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  @if (!loading && pedido) {
+    <mat-card class="detalle-card">
+      <mat-card-content>
+        <div class="grid">
+          <div><span class="label">Pedido</span><span class="value">#{{ pedido.id_pedido }}</span></div>
+          <div><span class="label">Cliente</span><span class="value">{{ pedido.cliente }}</span></div>
+          <div><span class="label">Empleado</span><span class="value">{{ pedido.empleado }}</span></div>
+          <div><span class="label">Fecha</span><span class="value">{{ pedido.fecha_pedido }}</span></div>
+          <div><span class="label">Estado pedido</span><mat-chip [color]="pedido.estado === 'Entregado' ? 'primary' : 'accent'" highlighted>{{ pedido.estado }}</mat-chip></div>
+          <div><span class="label">Estado envío</span><mat-chip [color]="pedido.estado_envio === 'Entregado' ? 'primary' : 'accent'" highlighted>{{ pedido.estado_envio }}</mat-chip></div>
+          <div><span class="label">Producto</span><span class="value">{{ pedido.producto }}</span></div>
+          <div><span class="label">Cantidad</span><span class="value">{{ pedido.cantidad }}</span></div>
+          <div><span class="label">Total</span><span class="value">${{ pedido.total | number:'1.2-2' }}</span></div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <div *ngIf="error" class="error-box">{{ error }}</div>
+</div>

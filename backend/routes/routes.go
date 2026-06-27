@@ -54,6 +54,9 @@ func ConfigurarRutas(r *gin.Engine) {
 			protegidas.GET("/ventas/:id",
 				middleware.RolRequired("Vendedor", "Gerente"),
 				handlers.DetallePedido)
+			protegidas.PUT("/ventas/:id/entregar",
+				middleware.RolRequired("Vendedor", "Gerente"),
+				handlers.MarcarPedidoEntregado)
 
 			// Proceso BPM (Gerente y Administrador)
 			protegidas.GET("/procesos-bpm",

@@ -37,11 +37,30 @@ export interface VentaResponse {
 export interface Pedido {
   id_pedido: number;
   id_cliente: number;
+  cliente?: string;
   id_empleado: number;
+  empleado?: string;
   fecha_pedido: string;
   estado: string;
+  estado_envio?: string;
   total: number;
   observaciones: string;
+  id_envio?: number;
+  id_producto?: number;
+  producto?: string;
+  cantidad?: number;
+  precio_unitario?: number;
+}
+
+export interface PedidoDetalle extends Pedido {
+  cliente: string;
+  empleado: string;
+  estado_envio: string;
+  id_envio: number;
+  id_producto: number;
+  producto: string;
+  cantidad: number;
+  precio_unitario: number;
 }
 
 @Injectable({
@@ -69,5 +88,13 @@ export class VentasService {
 
   listarVentas(): Observable<Pedido[]> {
     return this.api.get<Pedido[]>('/ventas');
+  }
+
+  detalleVenta(idPedido: number): Observable<PedidoDetalle> {
+    return this.api.get<PedidoDetalle>(`/ventas/${idPedido}`);
+  }
+
+  marcarEntregado(idPedido: number): Observable<{ mensaje: string }> {
+    return this.api.put<{ mensaje: string }>(`/ventas/${idPedido}/entregar`, {});
   }
 }

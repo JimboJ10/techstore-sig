@@ -155,7 +155,6 @@ CREATE OR REPLACE PROCEDURE SP_CONFIRMAR_RECEPCION(
 ) AS
     v_id_producto NUMBER;
     v_cantidad    NUMBER;
-    v_id_pedido   NUMBER;
     v_id_proceso  NUMBER;
 BEGIN
     SELECT id_producto INTO v_id_producto
@@ -179,15 +178,6 @@ BEGIN
     SET estado_envio = 'Entregado',
         fecha_entrega_real = SYSDATE
     WHERE id_envio = p_id_envio;
-
-    UPDATE PEDIDO
-    SET estado = 'Entregado'
-    WHERE id_pedido = v_id_pedido;
-
-    BEGIN
-        SELECT id_proceso INTO v_id_proceso
-        FROM PROCESO_BPM
-        WHERE id_producto = v_id_producto
         AND estado_proceso IN ('Aprobado', 'Enviado')
         ORDER BY fecha_inicio DESC
         FETCH FIRST 1 ROWS ONLY;

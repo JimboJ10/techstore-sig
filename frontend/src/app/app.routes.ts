@@ -34,6 +34,11 @@ export const routes: Routes = [
           import('./components/ventas/pos/pos.component').then(m => m.PosComponent)
       },
       {
+        path: 'ventas/:id',
+        loadComponent: () =>
+          import('./components/ventas/detalle-venta/detalle-venta.component').then(m => m.DetalleVentaComponent)
+      },
+      {
         path: 'bpm',
         loadComponent: () =>
           import('./components/bpm/lista-bpm/lista-bpm.component').then(m => m.ListaBpmComponent)

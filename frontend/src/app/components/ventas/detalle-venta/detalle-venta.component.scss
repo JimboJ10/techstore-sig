@@ -1,0 +1,60 @@
+.detalle-container {
+  padding: 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1565c0;
+  margin: 0;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.detalle-card {
+  padding: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.value {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.error-box {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #ffebee;
+  color: #c62828;
+}
