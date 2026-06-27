@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"techstore-api/config"
 	"techstore-api/models"
 
@@ -17,6 +18,15 @@ func RegistrarLecturaIOT(c *gin.Context) {
 		return
 	}
 
+	codigoLeido := strings.TrimSpace(req.CodigoLeido)
+	if codigoLeido == "" {
+		codigoLeido = strings.TrimSpace(req.CodigoBarras)
+	}
+	if codigoLeido == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "El codigo leido es obligatorio"})
+		return
+	}
+
 	if req.TipoEvento == "Despacho" && req.IDEnvio == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "El envio es obligatorio para confirmar un despacho"})
 		return
@@ -27,7 +37,7 @@ func RegistrarLecturaIOT(c *gin.Context) {
 	var nombreProducto string
 	err := config.DB.QueryRow(`
 		SELECT id_producto, nombre_producto
-		FROM PRODUCTO WHERE codigo_barras = :1`, req.CodigoBarras).
+		FROM PRODUCTO WHERE codigo_barras = :1`, codigoLeido).
 		Scan(&idProducto, &nombreProducto)
 
 	if err != nil {
@@ -35,23 +45,36 @@ func RegistrarLecturaIOT(c *gin.Context) {
 		return
 	}
 
-	// Registrar lectura IoT
-	_, err = config.DB.Exec(`
-		BEGIN
-			SP_CONFIRMAR_DESPACHO(:1, :2, :3, :4);
-		END;`,
-		req.IDDispositivo, req.CodigoBarras, req.IDEnvio, req.TipoEvento)
+	switch req.TipoEvento {
+	case "Despacho":
+		_, err = config.DB.Exec(`
+			BEGIN
+				SP_CONFIRMAR_DESPACHO(:1, :2, :3, :4);
+			END;`,
+			req.IDDispositivo, codigoLeido, req.IDEnvio, req.TipoEvento)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	case "Recepcion":
+		_, err = config.DB.Exec(`
+			BEGIN
+				SP_CONFIRMAR_RECEPCION(:1, :2, :3, :4);
+			END;`,
+			req.IDDispositivo, codigoLeido, req.IDEnvio, req.TipoEvento)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"mensaje":      "Lectura IoT registrada exitosamente",
 		"producto":     nombreProducto,
-		"codigo_leido": req.CodigoBarras,
+		"codigo_leido": codigoLeido,
 		"tipo_evento":  req.TipoEvento,
+		"timestamp":    req.Timestamp,
 	})
 }
 

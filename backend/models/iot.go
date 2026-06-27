@@ -12,7 +12,9 @@ type LecturaIOT struct {
 
 type LecturaIOTRequest struct {
 	IDDispositivo int    `json:"id_dispositivo" binding:"required"`
-	CodigoBarras  string `json:"codigo_barras" binding:"required"`
+	CodigoLeido   string `json:"codigo_leido" binding:"required"`
+	CodigoBarras  string `json:"codigo_barras"`
 	IDEnvio       int    `json:"id_envio"`
 	TipoEvento    string `json:"tipo_evento" binding:"required,oneof=Despacho Recepcion"`
+	Timestamp     string `json:"timestamp"`
 }

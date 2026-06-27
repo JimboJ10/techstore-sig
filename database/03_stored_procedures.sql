@@ -142,3 +142,69 @@ EXCEPTION
         RAISE;
 END SP_CONFIRMAR_DESPACHO;
 /
+
+-- ============================================
+-- SP 4: CONFIRMAR RECEPCION IOT
+-- Registra lectura IoT, incrementa stock y cierra BPM
+-- ============================================
+CREATE OR REPLACE PROCEDURE SP_CONFIRMAR_RECEPCION(
+    p_id_dispositivo  IN NUMBER,
+    p_codigo_barras   IN VARCHAR2,
+    p_id_envio        IN NUMBER,
+    p_tipo_evento     IN VARCHAR2
+) AS
+    v_id_producto NUMBER;
+    v_cantidad    NUMBER;
+    v_id_pedido   NUMBER;
+    v_id_proceso  NUMBER;
+BEGIN
+    SELECT id_producto INTO v_id_producto
+    FROM PRODUCTO WHERE codigo_barras = p_codigo_barras;
+
+    INSERT INTO LECTURA_IOT (id_dispositivo, id_producto, id_envio, codigo_leido, tipo_evento)
+    VALUES (p_id_dispositivo, v_id_producto, p_id_envio, p_codigo_barras, p_tipo_evento);
+
+    SELECT d.cantidad, e.id_pedido INTO v_cantidad, v_id_pedido
+    FROM ENVIO e
+    JOIN DETALLE_PEDIDO d ON d.id_pedido = e.id_pedido
+    WHERE e.id_envio = p_id_envio
+    AND d.id_producto = v_id_producto;
+
+    UPDATE INVENTARIO
+    SET stock_actual = stock_actual + v_cantidad,
+        fecha_actualizacion = SYSDATE
+    WHERE id_producto = v_id_producto;
+
+    UPDATE ENVIO
+    SET estado_envio = 'Entregado',
+        fecha_entrega_real = SYSDATE
+    WHERE id_envio = p_id_envio;
+
+    UPDATE PEDIDO
+    SET estado = 'Entregado'
+    WHERE id_pedido = v_id_pedido;
+
+    BEGIN
+        SELECT id_proceso INTO v_id_proceso
+        FROM PROCESO_BPM
+        WHERE id_producto = v_id_producto
+        AND estado_proceso IN ('Aprobado', 'Enviado')
+        ORDER BY fecha_inicio DESC
+        FETCH FIRST 1 ROWS ONLY;
+
+        UPDATE PROCESO_BPM
+        SET estado_proceso = 'Recibido',
+            fecha_recepcion = SYSDATE
+        WHERE id_proceso = v_id_proceso;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+    END;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END SP_CONFIRMAR_RECEPCION;
+/
