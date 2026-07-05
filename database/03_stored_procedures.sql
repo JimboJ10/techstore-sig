@@ -108,32 +108,49 @@ CREATE OR REPLACE PROCEDURE SP_CONFIRMAR_DESPACHO(
     p_id_envio        IN NUMBER,
     p_tipo_evento     IN VARCHAR2
 ) AS
-    v_id_producto NUMBER;
-    v_tiempo      NUMBER;
+        v_id_producto     NUMBER;
+        v_id_pedido       NUMBER;
+        v_tiempo          NUMBER := 0;
+        v_existente       NUMBER := 0;
 BEGIN
-    -- Buscar producto por codigo de barras
-    SELECT id_producto INTO v_id_producto
-    FROM PRODUCTO WHERE codigo_barras = p_codigo_barras;
+        SELECT id_producto
+            INTO v_id_producto
+            FROM PRODUCTO
+         WHERE codigo_barras = p_codigo_barras;
 
-    -- Registrar lectura IoT
-    INSERT INTO LECTURA_IOT (id_dispositivo, id_producto, id_envio, codigo_leido, tipo_evento)
-    VALUES (p_id_dispositivo, v_id_producto, p_id_envio, p_codigo_barras, p_tipo_evento);
+        SELECT id_pedido
+            INTO v_id_pedido
+            FROM ENVIO
+         WHERE id_envio = p_id_envio;
 
-    IF p_tipo_evento = 'Despacho' THEN
-        -- Calcular tiempo de preparacion en minutos
-        SELECT ROUND((SYSDATE - fecha_despacho) * 1440)
-        INTO v_tiempo
-        FROM ENVIO WHERE id_envio = p_id_envio;
+        SELECT COUNT(*)
+            INTO v_existente
+            FROM LECTURA_IOT
+         WHERE id_envio = p_id_envio
+             AND id_producto = v_id_producto
+             AND UPPER(tipo_evento) = 'DESPACHO';
 
-        UPDATE ENVIO
-        SET estado_envio = 'Despachado',
-            fecha_despacho = SYSDATE,
-            tiempo_preparacion_min = NVL(v_tiempo, 0)
-        WHERE id_envio = p_id_envio;
+        IF v_existente = 0 THEN
+                INSERT INTO LECTURA_IOT (id_dispositivo, id_producto, id_envio, codigo_leido, tipo_evento)
+                VALUES (p_id_dispositivo, v_id_producto, p_id_envio, p_codigo_barras, p_tipo_evento);
 
-        UPDATE PEDIDO SET estado = 'Despachado'
-        WHERE id_pedido = (SELECT id_pedido FROM ENVIO WHERE id_envio = p_id_envio);
-    END IF;
+                SELECT ROUND((SYSDATE - NVL(fecha_despacho, SYSDATE)) * 1440)
+                    INTO v_tiempo
+                    FROM ENVIO
+                 WHERE id_envio = p_id_envio;
+
+                UPDATE ENVIO
+                     SET estado_envio = 'Despachado',
+                             fecha_despacho = SYSDATE,
+                             tiempo_preparacion_min = NVL(v_tiempo, 0)
+                 WHERE id_envio = p_id_envio
+                     AND estado_envio NOT IN ('Despachado', 'Entregado');
+
+                UPDATE PEDIDO
+                     SET estado = 'Despachado'
+                 WHERE id_pedido = v_id_pedido
+                     AND estado NOT IN ('Despachado', 'Entregado');
+        END IF;
 
     COMMIT;
 EXCEPTION
@@ -152,44 +169,98 @@ CREATE OR REPLACE PROCEDURE SP_CONFIRMAR_RECEPCION(
     p_codigo_barras   IN VARCHAR2,
     p_id_envio        IN NUMBER,
     p_tipo_evento     IN VARCHAR2
-) AS
-    v_id_producto NUMBER;
-    v_cantidad    NUMBER;
-    v_id_proceso  NUMBER;
+) IS
+        v_id_producto     NUMBER;
+        v_cantidad        NUMBER := 0;
+        v_id_pedido       NUMBER;
+        v_id_proceso      NUMBER;
+        v_existente       NUMBER := 0;
+        v_total_items     NUMBER := 0;
+        v_items_recibidos NUMBER := 0;
 BEGIN
-    SELECT id_producto INTO v_id_producto
-    FROM PRODUCTO WHERE codigo_barras = p_codigo_barras;
+    SELECT id_producto
+      INTO v_id_producto
+      FROM PRODUCTO
+     WHERE codigo_barras = p_codigo_barras;
 
-    INSERT INTO LECTURA_IOT (id_dispositivo, id_producto, id_envio, codigo_leido, tipo_evento)
-    VALUES (p_id_dispositivo, v_id_producto, p_id_envio, p_codigo_barras, p_tipo_evento);
+        SELECT COUNT(*)
+            INTO v_existente
+            FROM LECTURA_IOT
+         WHERE id_envio = p_id_envio
+             AND id_producto = v_id_producto
+             AND UPPER(tipo_evento) = 'RECEPCION';
 
-    SELECT d.cantidad, e.id_pedido INTO v_cantidad, v_id_pedido
-    FROM ENVIO e
-    JOIN DETALLE_PEDIDO d ON d.id_pedido = e.id_pedido
-    WHERE e.id_envio = p_id_envio
-    AND d.id_producto = v_id_producto;
+        IF v_existente = 0 THEN
+                INSERT INTO LECTURA_IOT (id_dispositivo, id_producto, id_envio, codigo_leido, tipo_evento)
+                VALUES (p_id_dispositivo, v_id_producto, p_id_envio, p_codigo_barras, p_tipo_evento);
 
-    UPDATE INVENTARIO
-    SET stock_actual = stock_actual + v_cantidad,
-        fecha_actualizacion = SYSDATE
-    WHERE id_producto = v_id_producto;
+                BEGIN
+                        SELECT d.cantidad, e.id_pedido
+                            INTO v_cantidad, v_id_pedido
+                            FROM ENVIO e
+                            JOIN DETALLE_PEDIDO d ON d.id_pedido = e.id_pedido
+                         WHERE e.id_envio = p_id_envio
+                             AND d.id_producto = v_id_producto;
 
-    UPDATE ENVIO
-    SET estado_envio = 'Entregado',
-        fecha_entrega_real = SYSDATE
-    WHERE id_envio = p_id_envio;
-        AND estado_proceso IN ('Aprobado', 'Enviado')
-        ORDER BY fecha_inicio DESC
-        FETCH FIRST 1 ROWS ONLY;
+                        UPDATE INVENTARIO
+                             SET stock_actual = stock_actual + v_cantidad,
+                                     fecha_actualizacion = SYSDATE
+                         WHERE id_producto = v_id_producto;
+                EXCEPTION
+                        WHEN NO_DATA_FOUND THEN
+                                v_cantidad := 0;
+                                v_id_pedido := NULL;
+                END;
 
-        UPDATE PROCESO_BPM
-        SET estado_proceso = 'Recibido',
-            fecha_recepcion = SYSDATE
-        WHERE id_proceso = v_id_proceso;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            NULL;
-    END;
+                BEGIN
+                        SELECT id_proceso
+                            INTO v_id_proceso
+                            FROM (
+                                        SELECT pb.id_proceso
+                                            FROM PROCESO_BPM pb
+                                         WHERE pb.id_producto = v_id_producto
+                                             AND pb.estado_proceso IN ('Aprobado','Enviado')
+                                         ORDER BY pb.fecha_inicio DESC
+                                     )
+                         WHERE ROWNUM = 1;
+
+                        UPDATE PROCESO_BPM
+                             SET estado_proceso = 'Recibido',
+                                     fecha_recepcion = SYSDATE
+                         WHERE id_proceso = v_id_proceso;
+                EXCEPTION
+                        WHEN NO_DATA_FOUND THEN NULL;
+                END;
+
+                BEGIN
+                        SELECT COUNT(*) INTO v_total_items
+                            FROM DETALLE_PEDIDO d
+                         WHERE d.id_pedido = v_id_pedido;
+
+                        SELECT COUNT(DISTINCT li.id_producto) INTO v_items_recibidos
+                            FROM LECTURA_IOT li
+                         WHERE li.id_envio = p_id_envio
+                             AND UPPER(li.tipo_evento) = 'RECEPCION';
+
+                        IF v_id_pedido IS NOT NULL
+                             AND v_total_items > 0
+                             AND v_items_recibidos >= v_total_items THEN
+                                UPDATE ENVIO
+                                     SET estado_envio = 'Entregado',
+                                             fecha_entrega_real = SYSDATE
+                                 WHERE id_envio = p_id_envio
+                                     AND estado_envio <> 'Entregado';
+
+                                UPDATE PEDIDO
+                                     SET estado = 'Entregado'
+                                 WHERE id_pedido = v_id_pedido
+                                     AND estado <> 'Entregado';
+                        END IF;
+                EXCEPTION
+                        WHEN OTHERS THEN
+                                NULL;
+                END;
+        END IF;
 
     COMMIT;
 EXCEPTION

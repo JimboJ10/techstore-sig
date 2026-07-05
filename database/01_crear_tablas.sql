@@ -238,21 +238,35 @@ WHEN (NEW.stock_actual < NEW.stock_minimo)
 DECLARE
     v_proveedor NUMBER;
 BEGIN
-    SELECT id_proveedor INTO v_proveedor
-    FROM PROCESO_BPM
-    WHERE id_producto = :NEW.id_producto
-    AND ROWNUM = 1;
+    -- Intentar buscar proveedor en PRODUCTO_PROVEEDOR usando SQL dinámico (si existe)
+    BEGIN
+        EXECUTE IMMEDIATE
+          'SELECT id_proveedor FROM PRODUCTO_PROVEEDOR WHERE id_producto = :1 AND ROWNUM = 1'
+        INTO v_proveedor
+        USING :NEW.id_producto;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_proveedor := NULL;
+        WHEN OTHERS THEN
+            v_proveedor := NULL;
+    END;
+
+    -- Si no se obtuvo proveedor desde mapping, tomar el primer proveedor disponible (fallback)
+    IF v_proveedor IS NULL THEN
+        SELECT id_proveedor INTO v_proveedor FROM PROVEEDOR WHERE ROWNUM = 1;
+    END IF;
 
     INSERT INTO PROCESO_BPM (
         id_proveedor, id_producto, cantidad_solicitada,
-        estado_proceso, activado_automaticamente
+        estado_proceso, activado_automaticamente, fecha_inicio
     ) VALUES (
         v_proveedor, :NEW.id_producto,
-        :NEW.stock_minimo * 2,
-        'Generado', 1
+        NVL(:NEW.stock_minimo, 1) * 2,
+        'Generado', 1, SYSDATE
     );
 EXCEPTION
-    WHEN NO_DATA_FOUND THEN NULL;
+    WHEN OTHERS THEN
+        NULL;
 END;
 /
 
