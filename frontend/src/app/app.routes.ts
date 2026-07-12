@@ -49,6 +49,11 @@ export const routes: Routes = [
           import('./components/bodega/lecturas-iot/lecturas-iot.component').then(m => m.LecturasIotComponent)
       },
       {
+        path: 'productos',
+        loadComponent: () =>
+          import('./components/productos/productos.component').then(m => m.ProductosComponent)
+      },
+      {
         path: 'clientes',
         loadComponent: () =>
           import('./components/clientes/clientes.component').then(m => m.ClientesComponent)

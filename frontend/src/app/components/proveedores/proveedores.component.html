@@ -5,16 +5,82 @@
       <mat-icon class="header-icon">local_shipping</mat-icon>
       <div>
         <h2 class="page-title">Proveedores</h2>
-        <p class="page-subtitle">Directorio de proveedores registrados en el sistema</p>
+        <p class="page-subtitle">Directorio de proveedores — usados en el módulo BPM</p>
       </div>
     </div>
     <div class="header-actions">
-      <button mat-stroked-button (click)="refrescar()" [disabled]="loading">
-        <mat-icon>refresh</mat-icon>
-        Actualizar
+      <button mat-stroked-button (click)="cargarProveedores()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon> Actualizar
       </button>
+      @if (modoFormulario === 'ninguno') {
+        <button mat-raised-button color="primary" (click)="abrirCrear()">
+          <mat-icon>add</mat-icon> Nuevo Proveedor
+        </button>
+      }
     </div>
   </div>
+
+  <!-- Formulario CREAR / EDITAR -->
+  @if (modoFormulario !== 'ninguno') {
+    <mat-card class="form-card" [class.edit-card]="modoFormulario === 'editar'">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>{{ modoFormulario === 'crear' ? 'add_business' : 'edit' }}</mat-icon>
+          {{ modoFormulario === 'crear' ? 'Nuevo Proveedor' : 'Editar: ' + proveedorEditando?.razon_social }}
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="form-grid">
+          <mat-form-field appearance="outline" class="col-2">
+            <mat-label>Razón Social *</mat-label>
+            <input matInput formControlName="razon_social">
+            <mat-icon matSuffix>business</mat-icon>
+            <mat-error>Requerido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>RUC</mat-label>
+            <input matInput formControlName="ruc">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Correo</mat-label>
+            <input matInput type="email" formControlName="correo">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error>Correo inválido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono">
+            <mat-icon matSuffix>phone</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Contacto</mat-label>
+            <input matInput formControlName="contacto_nombre">
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="col-2">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="direccion">
+            <mat-icon matSuffix>location_on</mat-icon>
+          </mat-form-field>
+
+          <div class="form-actions col-2">
+            <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+            <button mat-raised-button color="primary" type="submit"
+                    [disabled]="form.invalid || loadingAccion">
+              @if (loadingAccion) { <mat-spinner diameter="18"></mat-spinner> }
+              @else { <mat-icon>save</mat-icon> }
+              {{ modoFormulario === 'crear' ? 'Guardar proveedor' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
 
   <!-- Tabla -->
   <mat-card class="table-card">
@@ -33,17 +99,17 @@
       <div class="empty-state">
         <mat-icon>local_shipping</mat-icon>
         <p>No hay proveedores registrados.</p>
+        <button mat-raised-button color="primary" (click)="abrirCrear()">
+          Agregar primer proveedor
+        </button>
       </div>
     } @else {
       <div class="table-meta">
-        <span class="total-label">{{ proveedores.length }} proveedores registrados</span>
-        <span class="hint-text">
-          <mat-icon>info_outline</mat-icon>
-          Usados en el módulo BPM para generar órdenes de compra
-        </span>
+        <span>{{ proveedores.length }} proveedores registrados</span>
       </div>
       <div class="table-wrapper">
         <table mat-table [dataSource]="proveedores" class="proveedores-table">
+
           <ng-container matColumnDef="id_proveedor">
             <th mat-header-cell *matHeaderCellDef>#</th>
             <td mat-cell *matCellDef="let row">{{ row.id_proveedor }}</td>
@@ -71,9 +137,7 @@
             <td mat-cell *matCellDef="let row">
               @if (row.correo) {
                 <a [href]="'mailto:' + row.correo" class="email-link">{{ row.correo }}</a>
-              } @else {
-                <span class="empty-val">—</span>
-              }
+              } @else { <span class="empty-val">—</span> }
             </td>
           </ng-container>
 
@@ -90,14 +154,32 @@
                   <mat-icon>person</mat-icon>
                   {{ row.contacto_nombre }}
                 </div>
-              } @else {
-                <span class="empty-val">—</span>
-              }
+              } @else { <span class="empty-val">—</span> }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="primary"
+                      (click)="abrirEditar(row)"
+                      matTooltip="Editar proveedor"
+                      [disabled]="loadingAccion">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn"
+                      (click)="eliminar(row)"
+                      matTooltip="Eliminar proveedor"
+                      [disabled]="loadingAccion">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [class.row-editando]="proveedorEditando?.id_proveedor === row.id_proveedor">
+          </tr>
         </table>
       </div>
     }

@@ -28,10 +28,14 @@ import { Pedido, VentasService } from '../../../services/ventas.service';
   styleUrl: './lista-ventas.component.scss'
 })
 export class ListaVentasComponent implements OnInit {
+  todasVentas: Pedido[] = [];
   ventas: Pedido[] = [];
   loading = true;
   error = '';
-  displayedColumns = ['id_pedido', 'fecha_pedido', 'estado', 'total', 'acciones'];
+  filtroActivo = 'Todos';
+  displayedColumns = ['id_pedido', 'fecha_pedido', 'cliente', 'empleado', 'estado', 'estado_envio', 'total', 'acciones'];
+
+  readonly filtros = ['Todos', 'Pagado', 'Despachado', 'Entregado', 'Cancelado'];
 
   constructor(private ventasService: VentasService) {}
 
@@ -45,7 +49,8 @@ export class ListaVentasComponent implements OnInit {
 
     this.ventasService.listarVentas().subscribe({
       next: (data) => {
-        this.ventas = data;
+        this.todasVentas = data;
+        this.aplicarFiltro(this.filtroActivo);
         this.loading = false;
       },
       error: () => {
@@ -55,17 +60,40 @@ export class ListaVentasComponent implements OnInit {
     });
   }
 
+  aplicarFiltro(estado: string): void {
+    this.filtroActivo = estado;
+    this.ventas = estado === 'Todos'
+      ? this.todasVentas
+      : this.todasVentas.filter(v => v.estado === estado);
+  }
+
   getTotalVentas(): number {
     return this.ventas.reduce((sum, v) => sum + v.total, 0);
   }
 
   getEstadoColor(estado: string): string {
     switch (estado) {
-      case 'Pagado': return 'primary';
+      case 'Pagado':     return 'primary';
       case 'Despachado': return 'accent';
-      case 'Entregado': return 'primary';
-      case 'Cancelado': return 'warn';
-      default: return '';
+      case 'Entregado':  return 'primary';
+      case 'Cancelado':  return 'warn';
+      default:           return '';
     }
+  }
+
+  getEnvioColor(estado: string): string {
+    switch (estado) {
+      case 'Pendiente':       return 'warn';
+      case 'En preparacion':  return 'accent';
+      case 'Despachado':      return 'primary';
+      case 'Entregado':       return 'primary';
+      case 'Sin envio':       return '';
+      default:                return '';
+    }
+  }
+
+  contarPorEstado(estado: string): number {
+    if (estado === 'Todos') return this.todasVentas.length;
+    return this.todasVentas.filter(v => v.estado === estado).length;
   }
 }

@@ -37,12 +37,12 @@ export interface VentaResponse {
 export interface Pedido {
   id_pedido: number;
   id_cliente: number;
-  cliente?: string;
+  cliente: string;
   id_empleado: number;
-  empleado?: string;
+  empleado: string;
   fecha_pedido: string;
   estado: string;
-  estado_envio?: string;
+  estado_envio: string;
   total: number;
   observaciones: string;
   id_envio?: number;

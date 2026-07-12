@@ -23,6 +23,7 @@ export class SidebarComponent {
   menuItems = [
     { label: 'Dashboard',    icon: 'dashboard',       route: '/dashboard',    roles: ['Gerente'] },
     { label: 'Inventario',   icon: 'inventory',       route: '/inventario',   roles: ['Gerente', 'Administrador', 'Vendedor', 'Bodeguero'] },
+    { label: 'Productos',    icon: 'category',        route: '/productos',    roles: ['Gerente', 'Administrador'] },
     { label: 'Ventas',       icon: 'point_of_sale',   route: '/ventas',       roles: ['Gerente', 'Vendedor'] },
     { label: 'POS',          icon: 'shopping_cart',   route: '/ventas/pos',   roles: ['Vendedor', 'Gerente'] },
     { label: 'Clientes',     icon: 'people',          route: '/clientes',     roles: ['Gerente', 'Vendedor'] },

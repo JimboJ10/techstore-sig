@@ -86,3 +86,27 @@
     margin: 0 auto 16px;
   }
 }
+
+.filtros-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filtros-label {
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.filtros-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filtros-chips button.activo {
+  font-weight: 600;
+}

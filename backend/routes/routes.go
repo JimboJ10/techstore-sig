@@ -17,10 +17,27 @@ func ConfigurarRutas(r *gin.Engine) {
 		protegidas := api.Group("/")
 		protegidas.Use(middleware.AuthRequired())
 		{
+			// Categorías y marcas (auxiliares para formularios)
+			protegidas.GET("/categorias",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.ListarCategorias)
+			protegidas.GET("/marcas",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.ListarMarcas)
+
 			// Productos
 			protegidas.GET("/productos",
 				middleware.RolRequired("Gerente", "Administrador", "Vendedor", "Bodeguero"),
 				handlers.ListarProductos)
+			protegidas.POST("/productos",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.CrearProducto)
+			protegidas.PUT("/productos/:id",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.ActualizarProducto)
+			protegidas.DELETE("/productos/:id",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.DesactivarProducto)
 
 			// Inventario
 			protegidas.GET("/inventario",
@@ -72,10 +89,19 @@ func ConfigurarRutas(r *gin.Engine) {
 				middleware.RolRequired("Gerente", "Bodeguero"),
 				handlers.RecibirProcesoBPM)
 
-			// Proveedor
+			// Proveedores
 			protegidas.GET("/proveedores",
 				middleware.RolRequired("Gerente", "Administrador"),
 				handlers.ListarProveedores)
+			protegidas.POST("/proveedores",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.CrearProveedor)
+			protegidas.PUT("/proveedores/:id",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.ActualizarProveedor)
+			protegidas.DELETE("/proveedores/:id",
+				middleware.RolRequired("Gerente", "Administrador"),
+				handlers.EliminarProveedor)
 
 			// IoT - Bodega
 			protegidas.GET("/envios/pendientes",

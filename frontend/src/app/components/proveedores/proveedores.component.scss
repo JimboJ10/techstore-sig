@@ -44,6 +44,44 @@
   gap: 12px;
 }
 
+/* Formulario crear/editar */
+.form-card, .edit-card {
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+    }
+  }
+}
+
+.edit-card { border-left: 4px solid #1565c0; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+
+  .col-2 { grid-column: 1 / -1; }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
+
+  button[mat-raised-button] {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.row-editando { background: #e3f2fd; }
+
 /* Table */
 .table-card {
   overflow: hidden;

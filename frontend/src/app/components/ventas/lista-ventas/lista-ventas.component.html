@@ -18,13 +18,14 @@
   </div>
 
   @if (!loading) {
+    <!-- KPIs -->
     <div class="resumen-grid">
       <mat-card class="resumen-card">
         <mat-card-content>
           <mat-icon color="primary">receipt</mat-icon>
           <div>
             <span class="resumen-valor">{{ ventas.length }}</span>
-            <span class="resumen-label">Total pedidos</span>
+            <span class="resumen-label">Pedidos {{ filtroActivo === 'Todos' ? 'totales' : filtroActivo | lowercase }}</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -38,6 +39,21 @@
           </div>
         </mat-card-content>
       </mat-card>
+    </div>
+
+    <!-- Filtros por estado -->
+    <div class="filtros-row">
+      <span class="filtros-label">Filtrar:</span>
+      <div class="filtros-chips">
+        @for (f of filtros; track f) {
+          <button mat-stroked-button
+                  [class.activo]="filtroActivo === f"
+                  [color]="filtroActivo === f ? 'primary' : ''"
+                  (click)="aplicarFiltro(f)">
+            {{ f }} ({{ contarPorEstado(f) }})
+          </button>
+        }
+      </div>
     </div>
 
     <mat-card class="tabla-card">
@@ -57,11 +73,32 @@
             <td mat-cell *matCellDef="let venta">{{ venta.fecha_pedido }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="cliente">
+            <th mat-header-cell *matHeaderCellDef>Cliente</th>
+            <td mat-cell *matCellDef="let venta">
+              <strong>{{ venta.cliente }}</strong>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="empleado">
+            <th mat-header-cell *matHeaderCellDef>Atendido por</th>
+            <td mat-cell *matCellDef="let venta">{{ venta.empleado }}</td>
+          </ng-container>
+
           <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <th mat-header-cell *matHeaderCellDef>Estado pedido</th>
             <td mat-cell *matCellDef="let venta">
               <mat-chip [color]="getEstadoColor(venta.estado)" highlighted>
                 {{ venta.estado }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="estado_envio">
+            <th mat-header-cell *matHeaderCellDef>Envío</th>
+            <td mat-cell *matCellDef="let venta">
+              <mat-chip [color]="getEnvioColor(venta.estado_envio)" highlighted>
+                {{ venta.estado_envio }}
               </mat-chip>
             </td>
           </ng-container>
@@ -90,7 +127,7 @@
 
         <div *ngIf="ventas.length === 0" class="empty-state">
           <mat-icon>receipt_long</mat-icon>
-          <p>No hay ventas registradas</p>
+          <p>No hay ventas con estado "{{ filtroActivo }}"</p>
         </div>
       </mat-card-content>
     </mat-card>

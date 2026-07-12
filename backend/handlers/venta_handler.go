@@ -66,13 +66,21 @@ func RegistrarVenta(c *gin.Context) {
 	})
 }
 
-// GET /api/ventas - lista todos los pedidos
+// GET /api/ventas - lista todos los pedidos con nombres de cliente/empleado y estado de envío
 func ListarVentas(c *gin.Context) {
 	rows, err := config.DB.Query(`
-		SELECT p.id_pedido, p.id_cliente, p.id_empleado,
-		       TO_CHAR(p.fecha_pedido, 'YYYY-MM-DD') as fecha_pedido,
-		       p.estado, p.total
+		SELECT p.id_pedido, p.id_cliente,
+		       cl.nombres || ' ' || cl.apellidos AS cliente,
+		       p.id_empleado,
+		       em.nombres || ' ' || em.apellidos AS empleado,
+		       TO_CHAR(p.fecha_pedido, 'YYYY-MM-DD') AS fecha_pedido,
+		       p.estado,
+		       NVL(en.estado_envio, 'Sin envio') AS estado_envio,
+		       p.total
 		FROM PEDIDO p
+		JOIN CLIENTE cl ON cl.id_cliente = p.id_cliente
+		JOIN EMPLEADO em ON em.id_empleado = p.id_empleado
+		LEFT JOIN ENVIO en ON en.id_pedido = p.id_pedido
 		ORDER BY p.fecha_pedido DESC`)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -83,8 +91,10 @@ func ListarVentas(c *gin.Context) {
 	var pedidos []models.Pedido
 	for rows.Next() {
 		var p models.Pedido
-		err := rows.Scan(&p.IDPedido, &p.IDCliente, &p.IDEmpleado,
-			&p.FechaPedido, &p.Estado, &p.Total)
+		err := rows.Scan(
+			&p.IDPedido, &p.IDCliente, &p.Cliente,
+			&p.IDEmpleado, &p.Empleado,
+			&p.FechaPedido, &p.Estado, &p.EstadoEnvio, &p.Total)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

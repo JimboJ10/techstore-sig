@@ -13,11 +13,14 @@ type PedidoResponse struct {
 }
 
 type Pedido struct {
-	IDPedido    int     `json:"id_pedido"`
-	IDCliente   int     `json:"id_cliente"`
-	IDEmpleado  int     `json:"id_empleado"`
-	FechaPedido string  `json:"fecha_pedido"`
-	Estado      string  `json:"estado"`
-	Total       float64 `json:"total"`
-	Observaciones string `json:"observaciones"`
+	IDPedido      int     `json:"id_pedido"`
+	IDCliente     int     `json:"id_cliente"`
+	Cliente       string  `json:"cliente"`
+	IDEmpleado    int     `json:"id_empleado"`
+	Empleado      string  `json:"empleado"`
+	FechaPedido   string  `json:"fecha_pedido"`
+	Estado        string  `json:"estado"`
+	EstadoEnvio   string  `json:"estado_envio"`
+	Total         float64 `json:"total"`
+	Observaciones string  `json:"observaciones"`
 }
