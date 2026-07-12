@@ -15,7 +15,8 @@ func ListarProductos(c *gin.Context) {
 	rows, err := config.DB.Query(`
 		SELECT p.id_producto, p.id_categoria, c.nombre_categoria,
 		       p.id_marca, m.nombre_marca, p.nombre_producto,
-		       NVL(p.descripcion, ''), p.precio_unitario,
+		       NVL(DBMS_LOB.SUBSTR(p.descripcion, 500, 1), '') AS descripcion,
+		       p.precio_unitario,
 		       NVL(p.codigo_barras, ''), p.activo,
 		       NVL(i.stock_actual, 0), NVL(i.stock_minimo, 0),
 		       NVL(i.stock_maximo, 0), NVL(i.ubicacion_bodega, '')

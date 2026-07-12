@@ -1,0 +1,10 @@
+# Binarios compilados (no van al repo)
+techstore-api
+techstore-api.exe
+
+# Archivos de entorno locales
+.env
+*.env
+
+# Dependencias descargadas (se regeneran con go mod download)
+vendor/
