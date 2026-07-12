@@ -15,11 +15,11 @@ func ListarProductos(c *gin.Context) {
 	rows, err := config.DB.Query(`
 		SELECT p.id_producto, p.id_categoria, c.nombre_categoria,
 		       p.id_marca, m.nombre_marca, p.nombre_producto,
-		       NVL(DBMS_LOB.SUBSTR(p.descripcion, 500, 1), '') AS descripcion,
+		       DBMS_LOB.SUBSTR(p.descripcion, 500, 1),
 		       p.precio_unitario,
-		       NVL(p.codigo_barras, ''), p.activo,
+		       p.codigo_barras, p.activo,
 		       NVL(i.stock_actual, 0), NVL(i.stock_minimo, 0),
-		       NVL(i.stock_maximo, 0), NVL(i.ubicacion_bodega, '')
+		       NVL(i.stock_maximo, 0), i.ubicacion_bodega
 		FROM PRODUCTO p
 		JOIN CATEGORIA c ON c.id_categoria = p.id_categoria
 		JOIN MARCA m ON m.id_marca = p.id_marca
@@ -35,15 +35,19 @@ func ListarProductos(c *gin.Context) {
 	var productos []models.Producto
 	for rows.Next() {
 		var p models.Producto
+		var descripcion, codigoBarras, ubicacion sql.NullString
 		err := rows.Scan(
 			&p.IDProducto, &p.IDCategoria, &p.NombreCategoria,
 			&p.IDMarca, &p.NombreMarca, &p.NombreProducto,
-			&p.Descripcion, &p.PrecioUnitario, &p.CodigoBarras, &p.Activo,
-			&p.StockActual, &p.StockMinimo, &p.StockMaximo, &p.UbicacionBodega)
+			&descripcion, &p.PrecioUnitario, &codigoBarras, &p.Activo,
+			&p.StockActual, &p.StockMinimo, &p.StockMaximo, &ubicacion)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		p.Descripcion = descripcion.String
+		p.CodigoBarras = codigoBarras.String
+		p.UbicacionBodega = ubicacion.String
 		productos = append(productos, p)
 	}
 

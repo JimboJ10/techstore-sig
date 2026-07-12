@@ -32,8 +32,8 @@ type ProveedorRequest struct {
 func ListarProveedores(c *gin.Context) {
 	rows, err := config.DB.Query(`
 		SELECT id_proveedor, razon_social,
-		       NVL(ruc, ''), NVL(correo, ''),
-		       NVL(telefono, ''), NVL(direccion, ''), NVL(contacto_nombre, '')
+		       ruc, correo,
+		       telefono, direccion, contacto_nombre
 		FROM PROVEEDOR
 		ORDER BY id_proveedor`)
 	if err != nil {
@@ -45,12 +45,18 @@ func ListarProveedores(c *gin.Context) {
 	var proveedores []Proveedor
 	for rows.Next() {
 		var p Proveedor
-		err := rows.Scan(&p.IDProveedor, &p.RazonSocial, &p.RUC,
-			&p.Correo, &p.Telefono, &p.Direccion, &p.ContactoNombre)
+		var ruc, correo, telefono, direccion, contacto sql.NullString
+		err := rows.Scan(&p.IDProveedor, &p.RazonSocial,
+			&ruc, &correo, &telefono, &direccion, &contacto)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		p.RUC = ruc.String
+		p.Correo = correo.String
+		p.Telefono = telefono.String
+		p.Direccion = direccion.String
+		p.ContactoNombre = contacto.String
 		proveedores = append(proveedores, p)
 	}
 
