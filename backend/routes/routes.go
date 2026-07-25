@@ -114,16 +114,42 @@ func ConfigurarRutas(r *gin.Engine) {
 				middleware.RolRequired("Bodeguero", "Gerente"),
 				handlers.ListarLecturasIOT)
 
-			// Dashboard
+			// Dashboard Gerencial
 			protegidas.GET("/dashboard/kpis",
 				middleware.RolRequired("Gerente"),
 				handlers.GetKPIs)
 			protegidas.GET("/dashboard/ventas-periodo",
 				middleware.RolRequired("Gerente"),
 				handlers.GetVentasPorPeriodo)
+			protegidas.GET("/dashboard/ventas-mes",
+				middleware.RolRequired("Gerente"),
+				handlers.GetVentasPorMes)
+			protegidas.GET("/dashboard/ventas-anio",
+				middleware.RolRequired("Gerente"),
+				handlers.GetVentasPorAnio)
+			protegidas.GET("/dashboard/ventas-empleado",
+				middleware.RolRequired("Gerente"),
+				handlers.GetVentasPorEmpleado)
 			protegidas.GET("/dashboard/productos-top",
 				middleware.RolRequired("Gerente"),
 				handlers.GetProductosTop)
+			protegidas.GET("/dashboard/pedidos-estado",
+				middleware.RolRequired("Gerente"),
+				handlers.GetPedidosPorEstado)
+			protegidas.GET("/dashboard/ticket-promedio",
+				middleware.RolRequired("Gerente"),
+				handlers.GetTicketPromedio)
+			protegidas.GET("/dashboard/ventas-categoria",
+				middleware.RolRequired("Gerente"),
+				handlers.GetVentasPorCategoria)
+			protegidas.GET("/dashboard/comparacion-periodos",
+				middleware.RolRequired("Gerente"),
+				handlers.GetComparacionPeriodos)
+
+			// Empleados (para filtros del dashboard)
+			protegidas.GET("/empleados",
+				middleware.RolRequired("Gerente"),
+				handlers.ListarEmpleados)
 		}
 	}
 }

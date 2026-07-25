@@ -1,93 +1,269 @@
-<div class="dashboard">
-  <h2 class="page-title">Dashboard Gerencial</h2>
+<div class="dash-root">
 
-  <div *ngIf="loading" class="loading-center">
-    <mat-spinner diameter="48"></mat-spinner>
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+  <div class="dash-header">
+    <div class="dash-title">
+      <span class="title-icon">📊</span>
+      <div>
+        <h1>Dashboard Gerencial</h1>
+        <p class="dash-subtitle">TechStore Smart Commerce — Métricas para toma de decisiones</p>
+      </div>
+    </div>
+
+    <!-- Panel de filtros -->
+    <div class="filter-panel">
+      <mat-form-field appearance="outline" class="filter-field" id="filtro-anio">
+        <mat-label>Año</mat-label>
+        <mat-select [(ngModel)]="filtroAnio" id="select-anio">
+          <mat-option value="">Todos los años</mat-option>
+          @for (a of anios; track a) {
+            <mat-option [value]="a">{{ a }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" id="filtro-mes">
+        <mat-label>Mes</mat-label>
+        <mat-select [(ngModel)]="filtroMes" id="select-mes">
+          <mat-option value="">Todos los meses</mat-option>
+          @for (m of meses; track m.valor) {
+            <mat-option [value]="m.valor">{{ m.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" id="filtro-empleado">
+        <mat-label>Empleado</mat-label>
+        <mat-select [(ngModel)]="filtroEmp" id="select-empleado">
+          <mat-option value="">Todos los empleados</mat-option>
+          @for (e of empleados; track e.id_empleado) {
+            <mat-option [value]="e.id_empleado.toString()">{{ e.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-flat-button class="btn-apply" (click)="aplicarFiltros()" id="btn-aplicar-filtros">
+          <mat-icon>filter_alt</mat-icon> Aplicar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button mat-stroked-button class="btn-reset" (click)="limpiarFiltros()" id="btn-limpiar-filtros"
+                  matTooltip="Volver a vista general">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+      </div>
+    </div>
   </div>
 
-  @if (!loading && kpis) {
-    <!-- KPI Cards -->
-    <div class="kpi-grid">
-      <mat-card class="kpi-card primary">
-        <mat-card-content>
-          <mat-icon>attach_money</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">${{ kpis.total_ventas_mes | number:'1.2-2' }}</span>
-            <span class="kpi-label">Ventas del mes</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="kpi-card success">
-        <mat-card-content>
-          <mat-icon>shopping_bag</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">{{ kpis.cantidad_pedidos }}</span>
-            <span class="kpi-label">Pedidos del mes</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="kpi-card warning" [class.alert]="kpis.productos_criticos > 0">
-        <mat-card-content>
-          <mat-icon>warning</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">{{ kpis.productos_criticos }}</span>
-            <span class="kpi-label">Stock crítico</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="kpi-card info">
-        <mat-card-content>
-          <mat-icon>pending</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">{{ kpis.pedidos_pendientes }}</span>
-            <span class="kpi-label">Pedidos pendientes</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="kpi-card purple">
-        <mat-card-content>
-          <mat-icon>timer</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">{{ kpis.tiempo_promedio_despacho }} min</span>
-            <span class="kpi-label">Tiempo prom. despacho</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="kpi-card danger" [class.alert]="kpis.bpm_pendientes > 0">
-        <mat-card-content>
-          <mat-icon>receipt_long</mat-icon>
-          <div class="kpi-info">
-            <span class="kpi-value">{{ kpis.bpm_pendientes }}</span>
-            <span class="kpi-label">BPM por aprobar</span>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="charts-grid">
-      <mat-card class="chart-card">
-        <mat-card-header>
-          <mat-card-title>Ventas últimos 30 días</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <canvas #ventasChart></canvas>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="chart-card">
-        <mat-card-header>
-          <mat-card-title>Productos más vendidos</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <canvas #productosChart></canvas>
-        </mat-card-content>
-      </mat-card>
+  <!-- ═══ LOADING ══════════════════════════════════════════════════════ -->
+  @if (loading) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="52" strokeWidth="4"></mat-spinner>
+      <span>Cargando métricas...</span>
     </div>
   }
+
+  <!-- ═══ CONTENIDO PRINCIPAL ══════════════════════════════════════════ -->
+  @if (!loading && kpis) {
+
+    <!-- ─── BANNER DE FILTROS ACTIVOS ─────────────────────────────── -->
+    @if (hayFiltrosActivos()) {
+      <div class="filter-banner">
+        <mat-icon>info_outline</mat-icon>
+        <span>
+          Mostrando datos filtrados por:
+          @if (filtroAnio) { <strong>Año {{ filtroAnio }}</strong> }
+          @if (filtroMes)  { @if (filtroAnio) { · } <strong>Mes {{ filtroMes }}</strong> }
+          @if (filtroEmp)  {
+            @if (filtroAnio || filtroMes) { · }
+            <strong>Empleado seleccionado</strong>
+          }
+        </span>
+      </div>
+    }
+
+    <!-- ─── FILA 1: KPI CARDS ──────────────────────────────────────── -->
+    <section class="kpi-grid" aria-label="Indicadores clave">
+
+      <div class="kpi-card kpi-ventas" id="kpi-total-ventas">
+        <div class="kpi-icon"><mat-icon>payments</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">${{ formatCurrency(kpis.total_ventas_mes) }}</span>
+          <span class="kpi-lbl">Ventas del periodo</span>
+        </div>
+        <div class="kpi-glow kpi-glow-blue"></div>
+      </div>
+
+      <div class="kpi-card kpi-pedidos" id="kpi-pedidos">
+        <div class="kpi-icon"><mat-icon>shopping_bag</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.cantidad_pedidos }}</span>
+          <span class="kpi-lbl">Pedidos del periodo</span>
+        </div>
+        <div class="kpi-glow kpi-glow-green"></div>
+      </div>
+
+      <div class="kpi-card kpi-ticket" id="kpi-ticket-promedio">
+        <div class="kpi-icon"><mat-icon>receipt</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">${{ formatCurrency(kpis.ticket_promedio) }}</span>
+          <span class="kpi-lbl">Ticket promedio</span>
+        </div>
+        <div class="kpi-glow kpi-glow-amber"></div>
+      </div>
+
+      <div class="kpi-card" [class.kpi-alert]="kpis.productos_criticos > 0" id="kpi-stock-critico">
+        <div class="kpi-icon"><mat-icon>inventory_2</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.productos_criticos }}</span>
+          <span class="kpi-lbl">Stock crítico</span>
+        </div>
+        <div class="kpi-glow" [class.kpi-glow-red]="kpis.productos_criticos > 0" [class.kpi-glow-slate]="kpis.productos_criticos === 0"></div>
+      </div>
+
+      <div class="kpi-card kpi-pendientes" id="kpi-pendientes">
+        <div class="kpi-icon"><mat-icon>pending_actions</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.pedidos_pendientes }}</span>
+          <span class="kpi-lbl">Pedidos pendientes</span>
+        </div>
+        <div class="kpi-glow kpi-glow-violet"></div>
+      </div>
+
+      <div class="kpi-card kpi-tiempo" id="kpi-tiempo-despacho">
+        <div class="kpi-icon"><mat-icon>timer</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.tiempo_promedio_despacho }} min</span>
+          <span class="kpi-lbl">Tiempo prom. despacho</span>
+        </div>
+        <div class="kpi-glow kpi-glow-teal"></div>
+      </div>
+
+      <div class="kpi-card" [class.kpi-alert]="kpis.bpm_pendientes > 0" id="kpi-bpm">
+        <div class="kpi-icon"><mat-icon>receipt_long</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.bpm_pendientes }}</span>
+          <span class="kpi-lbl">BPM por aprobar</span>
+        </div>
+        <div class="kpi-glow" [class.kpi-glow-red]="kpis.bpm_pendientes > 0" [class.kpi-glow-slate]="kpis.bpm_pendientes === 0"></div>
+      </div>
+
+      <div class="kpi-card kpi-devol" id="kpi-devolucion">
+        <div class="kpi-icon"><mat-icon>assignment_return</mat-icon></div>
+        <div class="kpi-body">
+          <span class="kpi-val">{{ kpis.tasa_devolucion | number:'1.1-1' }}%</span>
+          <span class="kpi-lbl">Tasa devolución</span>
+        </div>
+        <div class="kpi-glow kpi-glow-orange"></div>
+      </div>
+
+    </section>
+
+    <!-- ─── FILA 2: Gráficos grandes ─────────────────────────────────── -->
+    <section class="charts-row-full" aria-label="Comparación de periodos">
+      <div class="chart-card chart-wide" id="chart-comparacion-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">compare_arrows</mat-icon>
+          <div>
+            <h3>Comparación de ventas — Año actual vs anterior</h3>
+            <p class="chart-desc">Tendencia mensual de ingresos por periodo</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartComparacion id="chart-comparacion"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FILA 3: 3 gráficos medianos ───────────────────────────────── -->
+    <section class="charts-row-3" aria-label="Análisis detallado">
+
+      <div class="chart-card" id="chart-productos-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">star</mat-icon>
+          <div>
+            <h3>Top 10 productos más vendidos</h3>
+            <p class="chart-desc">Por unidades vendidas</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartProductos id="chart-productos"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" id="chart-estados-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">donut_large</mat-icon>
+          <div>
+            <h3>Distribución de pedidos</h3>
+            <p class="chart-desc">Por estado actual</p>
+          </div>
+        </div>
+        <div class="chart-body chart-body-doughnut">
+          <canvas #chartEstados id="chart-estados"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" id="chart-anios-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">bar_chart</mat-icon>
+          <div>
+            <h3>Ventas por año</h3>
+            <p class="chart-desc">Últimos 4 años</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartAnios id="chart-anios"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ─── FILA 4: 3 gráficos inferiores ────────────────────────────── -->
+    <section class="charts-row-3" aria-label="Análisis por empleado y categoría">
+
+      <div class="chart-card" id="chart-empleados-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">group</mat-icon>
+          <div>
+            <h3>Ventas por empleado</h3>
+            <p class="chart-desc">Ingresos totales por vendedor</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartEmpleados id="chart-empleados"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" id="chart-ticket-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">trending_up</mat-icon>
+          <div>
+            <h3>Ticket promedio mensual</h3>
+            <p class="chart-desc">Valor promedio por pedido</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartTicket id="chart-ticket"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" id="chart-categorias-card">
+        <div class="chart-card-header">
+          <mat-icon class="chart-icon">category</mat-icon>
+          <div>
+            <h3>Ventas por categoría</h3>
+            <p class="chart-desc">Ingresos por tipo de producto</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas #chartCategorias id="chart-categorias"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+  }<!-- /!loading -->
+
 </div>
