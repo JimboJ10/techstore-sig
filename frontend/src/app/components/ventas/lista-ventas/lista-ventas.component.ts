@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Pedido, VentasService } from '../../../services/ventas.service';
 
 @Component({
@@ -22,7 +23,8 @@ import { Pedido, VentasService } from '../../../services/ventas.service';
     MatButtonModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatPaginatorModule
   ],
   templateUrl: './lista-ventas.component.html',
   styleUrl: './lista-ventas.component.scss'
@@ -34,6 +36,9 @@ export class ListaVentasComponent implements OnInit {
   error = '';
   filtroActivo = 'Todos';
   displayedColumns = ['id_pedido', 'fecha_pedido', 'cliente', 'empleado', 'estado', 'estado_envio', 'total', 'acciones'];
+  pageIndex = 0;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   readonly filtros = ['Todos', 'Pagado', 'Despachado', 'Entregado', 'Cancelado'];
 
@@ -65,6 +70,7 @@ export class ListaVentasComponent implements OnInit {
     this.ventas = estado === 'Todos'
       ? this.todasVentas
       : this.todasVentas.filter(v => v.estado === estado);
+    this.pageIndex = 0;
   }
 
   getTotalVentas(): number {
@@ -95,5 +101,15 @@ export class ListaVentasComponent implements OnInit {
   contarPorEstado(estado: string): number {
     if (estado === 'Todos') return this.todasVentas.length;
     return this.todasVentas.filter(v => v.estado === estado).length;
+  }
+
+  get ventasPaginadas(): Pedido[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.ventas.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }

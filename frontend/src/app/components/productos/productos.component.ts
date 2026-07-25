@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import {
   ProductosService, Producto, Categoria, Marca,
   ProductoCreateRequest, ProductoUpdateRequest
@@ -35,7 +36,8 @@ import {
     MatSnackBarModule,
     MatTooltipModule,
     MatChipsModule,
-    MatDividerModule
+    MatDividerModule,
+    MatPaginatorModule
   ],
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.scss'
@@ -51,6 +53,9 @@ export class ProductosComponent implements OnInit {
 
   modoFormulario: 'ninguno' | 'crear' | 'editar' = 'ninguno';
   productoEditando: Producto | null = null;
+  pageIndex = 0;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   crearForm: FormGroup;
   editarForm: FormGroup;
@@ -105,6 +110,7 @@ export class ProductosComponent implements OnInit {
     this.productosService.listar().subscribe({
       next: (data) => {
         this.productos = data;
+        this.pageIndex = 0;
         this.loading = false;
       },
       error: () => {
@@ -189,6 +195,7 @@ export class ProductosComponent implements OnInit {
       next: () => {
         this.snackBar.open('Producto desactivado del catálogo', 'Cerrar', { duration: 3000 });
         this.productos = this.productos.filter(p => p.id_producto !== prod.id_producto);
+        this.pageIndex = 0;
         this.loadingAccion = false;
       },
       error: (err) => {
@@ -212,5 +219,15 @@ export class ProductosComponent implements OnInit {
 
   private mostrarError(msg: string): void {
     this.snackBar.open(msg, 'Cerrar', { duration: 4000, panelClass: 'snack-error' });
+  }
+
+  get productosPaginados(): Producto[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.productos.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }

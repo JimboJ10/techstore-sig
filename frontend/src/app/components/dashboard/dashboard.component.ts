@@ -25,6 +25,12 @@ import {
 
 Chart.register(...registerables);
 
+const COMMON_INTERACTION = {
+  mode: 'nearest' as const,
+  intersect: false,
+  axis: 'x' as const
+};
+
 // ─── Paletas de colores ──────────────────────────────────────────────────────
 const PALETTE_MULTI = [
   '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
@@ -236,7 +242,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         plugins: {
           legend: { labels: { color: '#374151', font: { size: 12 } } },
           tooltip: {
@@ -279,7 +287,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       options: {
         indexAxis: 'y',
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -319,7 +329,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         cutout: '62%',
         plugins: {
           legend: {
@@ -349,7 +361,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -413,7 +427,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         plugins: {
           legend: { labels: { color: '#374151' } }
         },
@@ -450,7 +466,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -502,7 +520,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: COMMON_INTERACTION,
+        layout: { padding: { top: 6, right: 8, bottom: 8, left: 4 } },
         plugins: {
           legend: { display: false }
         },

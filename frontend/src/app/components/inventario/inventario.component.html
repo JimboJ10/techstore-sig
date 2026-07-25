@@ -49,7 +49,7 @@
         <mat-card-title>Estado del inventario</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <table mat-table [dataSource]="inventario" class="full-width">
+        <table mat-table [dataSource]="inventarioPaginado" class="full-width">
 
           <ng-container matColumnDef="producto">
             <th mat-header-cell *matHeaderCellDef>Producto</th>
@@ -95,6 +95,13 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"
               [class.fila-critica]="row.stock_actual < row.stock_minimo"></tr>
         </table>
+        <mat-paginator
+          [length]="inventario.length"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="cambiarPagina($event)">
+        </mat-paginator>
       </mat-card-content>
     </mat-card>
   }

@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Inventario, InventarioService } from '../../services/inventario.service';
 
 @Component({
@@ -20,7 +21,8 @@ import { Inventario, InventarioService } from '../../services/inventario.service
     MatButtonModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatPaginatorModule
   ],
   templateUrl: './inventario.component.html',
   styleUrl: './inventario.component.scss'
@@ -30,6 +32,9 @@ export class InventarioComponent implements OnInit {
   loading = true;
   error = '';
   displayedColumns = ['producto', 'stock_actual', 'stock_minimo', 'stock_maximo', 'ubicacion', 'estado'];
+  pageIndex = 0;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   constructor(private inventarioService: InventarioService) {}
 
@@ -44,6 +49,7 @@ export class InventarioComponent implements OnInit {
     this.inventarioService.listar().subscribe({
       next: (data) => {
         this.inventario = data;
+        this.pageIndex = 0;
         this.loading = false;
       },
       error: () => {
@@ -80,5 +86,15 @@ export class InventarioComponent implements OnInit {
 
   getNormales(): number {
     return this.inventario.filter(i => i.stock_actual >= i.stock_minimo).length;
+  }
+
+  get inventarioPaginado(): Inventario[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.inventario.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }

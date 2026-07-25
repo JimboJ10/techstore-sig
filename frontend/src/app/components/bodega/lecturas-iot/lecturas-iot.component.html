@@ -86,7 +86,7 @@
           </div>
         } @else {
           <div class="table-wrapper">
-            <table mat-table [dataSource]="lecturas" class="iot-table">
+            <table mat-table [dataSource]="lecturasPaginadas" class="iot-table">
               <ng-container matColumnDef="id_lectura">
                 <th mat-header-cell *matHeaderCellDef>#</th>
                 <td mat-cell *matCellDef="let row">{{ row.id_lectura }}</td>
@@ -136,6 +136,13 @@
               <tr mat-row *matRowDef="let row; columns: columnasLecturas;"></tr>
             </table>
           </div>
+          <mat-paginator
+            [length]="lecturas.length"
+            [pageSize]="lecturasPageSize"
+            [pageIndex]="lecturasPageIndex"
+            [pageSizeOptions]="pageSizeOptions"
+            (page)="cambiarPaginaLecturas($event)">
+          </mat-paginator>
         }
       </mat-tab>
 
@@ -167,7 +174,7 @@
           </div>
         } @else {
           <div class="table-wrapper">
-            <table mat-table [dataSource]="envios" class="iot-table">
+            <table mat-table [dataSource]="enviosPaginados" class="iot-table">
               <ng-container matColumnDef="id_envio">
                 <th mat-header-cell *matHeaderCellDef>Envío</th>
                 <td mat-cell *matCellDef="let row">#{{ row.id_envio }}</td>
@@ -213,6 +220,13 @@
               <tr mat-row *matRowDef="let row; columns: columnasEnvios;"></tr>
             </table>
           </div>
+          <mat-paginator
+            [length]="envios.length"
+            [pageSize]="enviosPageSize"
+            [pageIndex]="enviosPageIndex"
+            [pageSizeOptions]="pageSizeOptions"
+            (page)="cambiarPaginaEnvios($event)">
+          </mat-paginator>
         }
       </mat-tab>
 

@@ -61,7 +61,7 @@
         <mat-card-title>Pedidos registrados</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <table mat-table [dataSource]="ventas" class="full-width">
+        <table mat-table [dataSource]="ventasPaginadas" class="full-width">
 
           <ng-container matColumnDef="id_pedido">
             <th mat-header-cell *matHeaderCellDef>#</th>
@@ -124,6 +124,13 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+        <mat-paginator
+          [length]="ventas.length"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="cambiarPagina($event)">
+        </mat-paginator>
 
         <div *ngIf="ventas.length === 0" class="empty-state">
           <mat-icon>receipt_long</mat-icon>

@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ProveedoresService, Proveedor, ProveedorRequest } from '../../services/proveedores.service';
 
 @Component({
@@ -30,7 +31,8 @@ import { ProveedoresService, Proveedor, ProveedorRequest } from '../../services/
     MatTooltipModule,
     MatChipsModule,
     MatSnackBarModule,
-    MatDividerModule
+    MatDividerModule,
+    MatPaginatorModule
   ],
   templateUrl: './proveedores.component.html',
   styleUrl: './proveedores.component.scss'
@@ -43,6 +45,9 @@ export class ProveedoresComponent implements OnInit {
 
   modoFormulario: 'ninguno' | 'crear' | 'editar' = 'ninguno';
   proveedorEditando: Proveedor | null = null;
+  pageIndex = 0;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   form: FormGroup;
   displayedColumns = ['id_proveedor', 'razon_social', 'ruc', 'correo', 'telefono', 'contacto_nombre', 'acciones'];
@@ -73,6 +78,7 @@ export class ProveedoresComponent implements OnInit {
     this.proveedoresService.listar().subscribe({
       next: (data) => {
         this.proveedores = data;
+        this.pageIndex = 0;
         this.loading = false;
       },
       error: () => {
@@ -118,6 +124,7 @@ export class ProveedoresComponent implements OnInit {
         next: (nuevo) => {
           this.snackBar.open(`Proveedor "${nuevo.razon_social}" creado`, 'Cerrar', { duration: 3000 });
           this.proveedores = [...this.proveedores, nuevo];
+          this.pageIndex = 0;
           this.cancelar();
           this.loadingAccion = false;
         },
@@ -150,6 +157,7 @@ export class ProveedoresComponent implements OnInit {
       next: () => {
         this.snackBar.open('Proveedor eliminado', 'Cerrar', { duration: 3000 });
         this.proveedores = this.proveedores.filter(p => p.id_proveedor !== prov.id_proveedor);
+        this.pageIndex = 0;
         this.loadingAccion = false;
       },
       error: (err) => {
@@ -161,5 +169,15 @@ export class ProveedoresComponent implements OnInit {
 
   private mostrarError(msg: string): void {
     this.snackBar.open(msg, 'Cerrar', { duration: 5000, panelClass: 'snack-error' });
+  }
+
+  get proveedoresPaginados(): Proveedor[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.proveedores.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }

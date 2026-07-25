@@ -108,7 +108,7 @@
         <span>{{ proveedores.length }} proveedores registrados</span>
       </div>
       <div class="table-wrapper">
-        <table mat-table [dataSource]="proveedores" class="proveedores-table">
+        <table mat-table [dataSource]="proveedoresPaginados" class="proveedores-table">
 
           <ng-container matColumnDef="id_proveedor">
             <th mat-header-cell *matHeaderCellDef>#</th>
@@ -182,6 +182,13 @@
           </tr>
         </table>
       </div>
+      <mat-paginator
+        [length]="proveedores.length"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="cambiarPagina($event)">
+      </mat-paginator>
     }
   </mat-card>
 </div>

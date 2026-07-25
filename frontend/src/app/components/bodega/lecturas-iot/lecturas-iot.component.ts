@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { BodegaService, LecturaIOT, EnvioPendiente } from '../../../services/bodega.service';
 
 @Component({
@@ -24,7 +25,8 @@ import { BodegaService, LecturaIOT, EnvioPendiente } from '../../../services/bod
     MatProgressSpinnerModule,
     MatTabsModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatPaginatorModule
   ],
   templateUrl: './lecturas-iot.component.html',
   styleUrl: './lecturas-iot.component.scss'
@@ -37,6 +39,11 @@ export class LecturasIotComponent implements OnInit {
   loadingEnvios = true;
   errorLecturas = '';
   errorEnvios = '';
+  lecturasPageIndex = 0;
+  lecturasPageSize = 10;
+  enviosPageIndex = 0;
+  enviosPageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   columnasLecturas = ['id_lectura', 'nombre_producto', 'codigo_leido', 'tipo_evento', 'id_dispositivo', 'id_envio', 'fecha_lectura'];
   columnasEnvios = ['id_envio', 'id_pedido', 'cliente', 'nombre_producto', 'codigo_barras', 'cantidad', 'estado_envio'];
@@ -58,6 +65,7 @@ export class LecturasIotComponent implements OnInit {
     this.bodegaService.listarLecturas().subscribe({
       next: (data) => {
         this.lecturas = data;
+        this.lecturasPageIndex = 0;
         this.loadingLecturas = false;
       },
       error: () => {
@@ -74,6 +82,7 @@ export class LecturasIotComponent implements OnInit {
     this.bodegaService.listarEnviosPendientes().subscribe({
       next: (data) => {
         this.envios = data;
+        this.enviosPageIndex = 0;
         this.loadingEnvios = false;
       },
       error: () => {
@@ -116,5 +125,25 @@ export class LecturasIotComponent implements OnInit {
     this.cargarLecturas();
     this.cargarEnvios();
     this.snackBar.open('Datos actualizados', 'Cerrar', { duration: 2000 });
+  }
+
+  get lecturasPaginadas(): LecturaIOT[] {
+    const start = this.lecturasPageIndex * this.lecturasPageSize;
+    return this.lecturas.slice(start, start + this.lecturasPageSize);
+  }
+
+  get enviosPaginados(): EnvioPendiente[] {
+    const start = this.enviosPageIndex * this.enviosPageSize;
+    return this.envios.slice(start, start + this.enviosPageSize);
+  }
+
+  cambiarPaginaLecturas(event: PageEvent): void {
+    this.lecturasPageIndex = event.pageIndex;
+    this.lecturasPageSize = event.pageSize;
+  }
+
+  cambiarPaginaEnvios(event: PageEvent): void {
+    this.enviosPageIndex = event.pageIndex;
+    this.enviosPageSize = event.pageSize;
   }
 }

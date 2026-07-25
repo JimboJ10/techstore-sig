@@ -211,7 +211,7 @@
         <span>{{ productos.length }} productos activos</span>
       </div>
       <div class="table-wrapper">
-        <table mat-table [dataSource]="productos" class="productos-table">
+        <table mat-table [dataSource]="productosPaginados" class="productos-table">
 
           <ng-container matColumnDef="id_producto">
             <th mat-header-cell *matHeaderCellDef>#</th>
@@ -281,6 +281,13 @@
           </tr>
         </table>
       </div>
+      <mat-paginator
+        [length]="productos.length"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="cambiarPagina($event)">
+      </mat-paginator>
     }
   </mat-card>
 </div>

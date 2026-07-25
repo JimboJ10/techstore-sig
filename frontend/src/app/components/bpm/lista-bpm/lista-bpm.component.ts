@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { BpmService, ProcesoBPM, Proveedor } from '../../../services/bpm.service';
 import { Producto } from '../../../services/ventas.service';
 import { AuthService } from '../../../services/auth.service';
@@ -34,7 +35,8 @@ import { AuthService } from '../../../services/auth.service';
     MatInputModule,
     MatSelectModule,
     MatSnackBarModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatPaginatorModule
   ],
   templateUrl: './lista-bpm.component.html',
   styleUrl: './lista-bpm.component.scss'
@@ -45,6 +47,9 @@ export class ListaBpmComponent implements OnInit {
   loadingAccion = false;
   mostrarFormulario = false;
   error = '';
+  pageIndex = 0;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50];
 
   nuevaOrdenForm: FormGroup;
   productos: Producto[] = [];
@@ -79,6 +84,7 @@ export class ListaBpmComponent implements OnInit {
     this.bpmService.listarProcesos().subscribe({
       next: (data) => {
         this.procesos = data;
+        this.pageIndex = 0;
         this.loading = false;
       },
       error: () => {
@@ -190,5 +196,15 @@ export class ListaBpmComponent implements OnInit {
 
   private mostrarError(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', { duration: 4000, panelClass: 'snack-error' });
+  }
+
+  get procesosPaginados(): ProcesoBPM[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.procesos.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }

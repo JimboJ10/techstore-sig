@@ -107,7 +107,7 @@
         <span class="total-label">{{ clientes.length }} clientes registrados</span>
       </div>
       <div class="table-wrapper">
-        <table mat-table [dataSource]="clientes" class="clientes-table">
+        <table mat-table [dataSource]="clientesPaginados" class="clientes-table">
           <ng-container matColumnDef="id_cliente">
             <th mat-header-cell *matHeaderCellDef>#</th>
             <td mat-cell *matCellDef="let row">{{ row.id_cliente }}</td>
@@ -155,6 +155,13 @@
           </tr>
         </table>
       </div>
+      <mat-paginator
+        [length]="clientes.length"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="cambiarPagina($event)">
+      </mat-paginator>
 
       <!-- Panel historial del cliente seleccionado -->
       @if (clienteSeleccionado) {
@@ -179,7 +186,7 @@
               <span>Este cliente no tiene pedidos registrados.</span>
             </div>
           } @else {
-            <table mat-table [dataSource]="historial" class="historial-table">
+            <table mat-table [dataSource]="historialPaginado" class="historial-table">
               <ng-container matColumnDef="id_pedido">
                 <th mat-header-cell *matHeaderCellDef># Pedido</th>
                 <td mat-cell *matCellDef="let row">#{{ row.id_pedido }}</td>
@@ -205,6 +212,13 @@
               <tr mat-header-row *matHeaderRowDef="displayedColumnsHistorial"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumnsHistorial;"></tr>
             </table>
+            <mat-paginator
+              [length]="historial.length"
+              [pageSize]="historialPageSize"
+              [pageIndex]="historialPageIndex"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="cambiarPaginaHistorial($event)">
+            </mat-paginator>
           }
         </div>
       }
