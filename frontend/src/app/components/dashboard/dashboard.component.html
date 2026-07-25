@@ -173,6 +173,13 @@
         <div class="chart-body">
           <canvas #chartComparacion id="chart-comparacion"></canvas>
         </div>
+        @if (mesesConDatos < 3) {
+          <div class="chart-data-note">
+            <mat-icon style="font-size:15px;height:15px;width:15px;vertical-align:middle;">info</mat-icon>
+            El gráfico muestra solo {{ mesesConDatos }} mes(es) con datos reales en {{ filtroAnio || 'el año actual' }}.
+            La vista mejorará conforme se registren más ventas en el sistema.
+          </div>
+        }
       </div>
     </section>
 

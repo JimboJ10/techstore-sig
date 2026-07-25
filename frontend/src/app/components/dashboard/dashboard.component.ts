@@ -89,6 +89,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   filtroAnio = '';
   filtroMes  = '';
   filtroEmp  = '';
+  mesesConDatos = 0;  // para mostrar aviso en el gráfico de comparación
 
   // ── Charts ──────────────────────────────────────────────────────────────
   private charts: Chart[] = [];
@@ -189,50 +190,70 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const anioActual   = this.filtroAnio || String(new Date().getFullYear());
     const anioAnterior = String(Number(anioActual) - 1);
 
+    // Siempre mostrar los 12 meses en el eje X aunque no haya datos
+    const TODOS_MESES = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+    const dataMap = new Map(data.map(d => [d.mes, d]));
+
+    const labelsCompletos = TODOS_MESES.map(m => this.mesLabel(m));
+    const actualData   = TODOS_MESES.map(m => dataMap.get(m)?.anio_actual  ?? null);
+    const anteriorData = TODOS_MESES.map(m => dataMap.get(m)?.anio_anterior ?? null);
+
+    // Cuantos meses tienen datos reales (exponer al template)
+    const mesesConDatos = actualData.filter(v => v !== null && v > 0).length;
+    this.mesesConDatos = mesesConDatos;
+
     const cfg: ChartConfiguration = {
       type: 'line',
       data: {
-        labels: data.map(d => this.mesLabel(d.mes)),
+        labels: labelsCompletos,
         datasets: [
           {
             label: `${anioActual}`,
-            data: data.map(d => d.anio_actual),
+            data: actualData,
             borderColor: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.12)',
+            backgroundColor: 'rgba(99,102,241,0.08)',
             borderWidth: 2.5,
-            tension: 0.4,
+            tension: mesesConDatos > 2 ? 0.3 : 0,
             fill: true,
+            spanGaps: false,
             pointBackgroundColor: '#6366f1',
-            pointRadius: 4
+            pointRadius: mesesConDatos <= 3 ? 7 : 5,
+            pointHoverRadius: 9
           },
           {
             label: `${anioAnterior}`,
-            data: data.map(d => d.anio_anterior),
+            data: anteriorData,
             borderColor: '#94a3b8',
-            backgroundColor: 'rgba(148,163,184,0.08)',
+            backgroundColor: 'rgba(148,163,184,0.05)',
             borderWidth: 2,
-            tension: 0.4,
+            tension: 0,
             fill: true,
+            spanGaps: false,
             borderDash: [6, 3],
             pointBackgroundColor: '#94a3b8',
-            pointRadius: 3
+            pointRadius: 4
           }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: true,
         plugins: {
-          legend: { labels: { color: '#e2e8f0', font: { size: 12 } } },
-          tooltip: { mode: 'index', intersect: false }
+          legend: { labels: { color: '#374151', font: { size: 12 } } },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            filter: (item) => item.raw !== null
+          }
         },
         scales: {
-          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
+          x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.07)' } },
           y: {
+            beginAtZero: true,
             ticks: {
-              color: '#94a3b8',
+              color: '#6b7280',
               callback: (v) => '$' + Number(v).toLocaleString('es-EC', { minimumFractionDigits: 0 })
             },
-            grid: { color: 'rgba(148,163,184,0.15)' }
+            grid: { color: 'rgba(0,0,0,0.07)' }
           }
         }
       }
@@ -265,14 +286,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
             callbacks: {
               afterLabel: (ctx) => {
                 const item = data[ctx.dataIndex];
+                if (!item) return '';
                 return `Ingresos: $${item.ingreso_total.toLocaleString('es-EC', { minimumFractionDigits: 2 })}`;
               }
             }
           }
         },
         scales: {
-          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
-          y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+          x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.07)' } },
+          y: { ticks: { color: '#374151', font: { size: 11 } }, grid: { display: false } }
         }
       }
     };
@@ -291,7 +313,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         datasets: [{
           data: data.map(e => e.cantidad),
           backgroundColor: data.map(e => ESTADO_COLORS[e.estado] ?? '#64748b'),
-          borderColor: '#1e293b',
+          borderColor: '#ffffff',
           borderWidth: 3,
           hoverOffset: 8
         }]
@@ -302,7 +324,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         plugins: {
           legend: {
             position: 'right',
-            labels: { color: '#e2e8f0', padding: 14, font: { size: 12 }, boxWidth: 14 }
+            labels: { color: '#374151', padding: 14, font: { size: 12 }, boxWidth: 14 }
           }
         }
       }
@@ -334,6 +356,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             callbacks: {
               label: (ctx) => {
                 const item = data[ctx.dataIndex];
+                if (!item) return ` $${Number(ctx.raw).toLocaleString('es-EC', { minimumFractionDigits: 2 })}`;
                 return [
                   ` $${Number(ctx.raw).toLocaleString('es-EC', { minimumFractionDigits: 2 })}`,
                   ` ${item.cantidad} pedido${item.cantidad !== 1 ? 's' : ''}`
@@ -344,15 +367,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         scales: {
           x: {
-            ticks: { color: '#e2e8f0', maxRotation: 25, font: { size: 11 } },
+            ticks: { color: '#374151', maxRotation: 25, font: { size: 11 } },
             grid: { display: false }
           },
           y: {
             ticks: {
-              color: '#94a3b8',
+              color: '#6b7280',
               callback: (v) => '$' + Number(v).toLocaleString('es-EC', { minimumFractionDigits: 0 })
             },
-            grid: { color: 'rgba(148,163,184,0.15)' }
+            grid: { color: 'rgba(0,0,0,0.07)' }
           }
         }
       }
@@ -365,18 +388,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const el = this.canvas(this.chartTicketRef);
     if (!el) return;
 
+    // Rellenar los 12 meses
+    const TODOS_MESES = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+    const dataMap = new Map(data.map(d => [d.mes, d]));
+    const labelsCompletos = TODOS_MESES.map(m => this.mesLabel(m));
+    const ticketData = TODOS_MESES.map(m => dataMap.get(m)?.ticket_promedio ?? null);
+
     const cfg: ChartConfiguration = {
       type: 'line',
       data: {
-        labels: data.map(t => this.mesLabel(t.mes)),
+        labels: labelsCompletos,
         datasets: [{
           label: 'Ticket promedio ($)',
-          data: data.map(t => t.ticket_promedio),
+          data: ticketData,
           borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245,158,11,0.15)',
+          backgroundColor: 'rgba(245,158,11,0.08)',
           borderWidth: 2.5,
-          tension: 0.4,
+          tension: 0.3,
           fill: true,
+          spanGaps: false,
           pointBackgroundColor: '#f59e0b',
           pointRadius: 5,
           pointHoverRadius: 7
@@ -385,16 +415,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       options: {
         responsive: true, maintainAspectRatio: true,
         plugins: {
-          legend: { labels: { color: '#e2e8f0' } }
+          legend: { labels: { color: '#374151' } }
         },
         scales: {
-          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' } },
+          x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.07)' } },
           y: {
+            beginAtZero: true,
             ticks: {
-              color: '#94a3b8',
+              color: '#6b7280',
               callback: (v) => '$' + Number(v).toLocaleString('es-EC', { minimumFractionDigits: 2 })
             },
-            grid: { color: 'rgba(148,163,184,0.15)' }
+            grid: { color: 'rgba(0,0,0,0.07)' }
           }
         }
       }
@@ -426,6 +457,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             callbacks: {
               label: (ctx) => {
                 const item = data[ctx.dataIndex];
+                if (!item) return ` $${Number(ctx.raw).toLocaleString('es-EC', { minimumFractionDigits: 2 })}`;
                 return [
                   ` $${Number(ctx.raw).toLocaleString('es-EC', { minimumFractionDigits: 2 })}`,
                   ` ${item.cantidad} unidades`
@@ -437,12 +469,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         scales: {
           x: {
             ticks: {
-              color: '#94a3b8',
+              color: '#6b7280',
               callback: (v) => '$' + Number(v).toLocaleString('es-EC', { minimumFractionDigits: 0 })
             },
-            grid: { color: 'rgba(148,163,184,0.15)' }
+            grid: { color: 'rgba(0,0,0,0.07)' }
           },
-          y: { ticks: { color: '#e2e8f0' }, grid: { display: false } }
+          y: { ticks: { color: '#374151' }, grid: { display: false } }
         },
         indexAxis: 'y'
       }
@@ -475,13 +507,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           legend: { display: false }
         },
         scales: {
-          x: { ticks: { color: '#e2e8f0', font: { size: 13, weight: 'bold' } }, grid: { display: false } },
+          x: { ticks: { color: '#374151', font: { size: 13, weight: 'bold' } }, grid: { display: false } },
           y: {
+            beginAtZero: true,
             ticks: {
-              color: '#94a3b8',
+              color: '#6b7280',
               callback: (v) => '$' + Number(v).toLocaleString('es-EC', { minimumFractionDigits: 0 })
             },
-            grid: { color: 'rgba(148,163,184,0.15)' }
+            grid: { color: 'rgba(0,0,0,0.07)' }
           }
         }
       }
