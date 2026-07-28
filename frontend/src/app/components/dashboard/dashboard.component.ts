@@ -31,6 +31,12 @@ const COMMON_INTERACTION = {
   axis: 'x' as const
 };
 
+const HORIZONTAL_BAR_INTERACTION = {
+  mode: 'nearest' as const,
+  intersect: true,
+  axis: 'y' as const
+};
+
 // ─── Paletas de colores ──────────────────────────────────────────────────────
 const PALETTE_MULTI = [
   '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
@@ -289,7 +295,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        interaction: COMMON_INTERACTION,
+        interaction: HORIZONTAL_BAR_INTERACTION,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -331,7 +337,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: COMMON_INTERACTION,
+        interaction: HORIZONTAL_BAR_INTERACTION,
         cutout: '62%',
         plugins: {
           legend: {
