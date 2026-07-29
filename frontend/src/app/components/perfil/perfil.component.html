@@ -1,0 +1,177 @@
+﻿<div class="perfil-container">
+
+  <!-- ── INFO DE USUARIO ─────────────────────────────────────────────────── -->
+  <mat-card class="perfil-card">
+    <div class="perfil-header">
+      <div class="avatar">
+        <mat-icon>account_circle</mat-icon>
+      </div>
+      <div class="user-info">
+        <h2>{{ usuario }}</h2>
+        <span class="rol-chip">{{ rol }}</span>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- ── SECCIÓN 2FA ─────────────────────────────────────────────────────── -->
+  <mat-card class="security-card">
+    <div class="section-title">
+      <mat-icon>security</mat-icon>
+      <h3>Autenticación de dos factores (2FA)</h3>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Mensajes de éxito / error -->
+    @if (mensajeOk) {
+      <div class="msg msg-ok">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ mensajeOk }}</span>
+      </div>
+    }
+    @if (mensajeErr) {
+      <div class="msg msg-err">
+        <mat-icon>error</mat-icon>
+        <span>{{ mensajeErr }}</span>
+      </div>
+    }
+
+    <!-- ══ Vista: info general ═══════════════════════════════════════════════ -->
+    @if (vista === 'info') {
+      <div class="status-row">
+        <div class="status-info">
+          <span class="status-label">Estado actual</span>
+          <div class="status-badge" [class.activo]="twoFAActivo" [class.inactivo]="!twoFAActivo">
+            <mat-icon>{{ twoFAActivo ? 'shield' : 'shield_off' }}</mat-icon>
+            {{ twoFAActivo ? '2FA Activo' : '2FA Inactivo' }}
+          </div>
+          <p class="status-desc">
+            @if (twoFAActivo) {
+              Tu cuenta requiere un código de verificación al iniciar sesión.
+            } @else {
+              Activa el 2FA para proteger tu cuenta con una capa adicional de seguridad.
+            }
+          </p>
+        </div>
+        <div class="status-actions">
+          @if (!twoFAActivo) {
+            <button mat-raised-button color="primary" id="btn-activar-2fa"
+                    (click)="iniciarActivacion()" [disabled]="cargando">
+              <mat-icon>add_moderator</mat-icon>
+              Activar 2FA
+            </button>
+          } @else {
+            <button mat-stroked-button color="warn" id="btn-desactivar-2fa"
+                    (click)="abrirDesactivar()" [disabled]="cargando">
+              <mat-icon>no_encryption</mat-icon>
+              Desactivar 2FA
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══ Vista: mostrar QR para escanear ═══════════════════════════════════ -->
+    @if (vista === 'activar-qr' && qrData) {
+      <div class="setup-section">
+        <h4>Paso 1 — Escanea el código QR</h4>
+        <p>Abre <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app compatible
+           y escanea el siguiente código:</p>
+
+        <div class="qr-wrapper">
+          <img [src]="'data:image/png;base64,' + qrData.qr_base64" alt="Código QR 2FA"
+               class="qr-img" id="img-qr-2fa"/>
+        </div>
+
+        <p class="manual-entry">
+          ¿No puedes escanear? Ingresa esta clave manualmente en tu app:
+          <code>{{ qrData.secret }}</code>
+        </p>
+
+        <div class="setup-actions">
+          <button mat-raised-button color="primary" id="btn-ya-escanee"
+                  (click)="pasarAConfirmar()">
+            Ya escanee el QR <mat-icon>arrow_forward</mat-icon>
+          </button>
+          <button mat-button (click)="cancelar()" id="btn-cancelar-setup">Cancelar</button>
+        </div>
+      </div>
+    }
+
+    <!-- ══ Vista: confirmar primer código ════════════════════════════════════ -->
+    @if (vista === 'activar-confirm') {
+      <div class="setup-section">
+        <h4>Paso 2 — Confirma con un código</h4>
+        <p>Ingresa el código de 6 dígitos que muestra tu app de autenticación
+           para verificar que todo está bien configurado:</p>
+
+        <form [formGroup]="confirmForm" (ngSubmit)="confirmarActivacion()">
+          <mat-form-field appearance="outline" class="codigo-field">
+            <mat-label>Código de verificación</mat-label>
+            <input matInput formControlName="codigo" type="text"
+                   inputmode="numeric" maxlength="6"
+                   placeholder="000000" autocomplete="one-time-code"
+                   id="input-confirm-totp">
+            <mat-icon matSuffix>lock</mat-icon>
+            <mat-error *ngIf="confirmForm.get('codigo')?.hasError('pattern')">
+              Debe ser exactamente 6 dígitos
+            </mat-error>
+          </mat-form-field>
+
+          <div class="setup-actions">
+            <button mat-raised-button color="primary" type="submit"
+                    [disabled]="confirmForm.invalid || cargando" id="btn-confirm-2fa">
+              <mat-spinner diameter="18" *ngIf="cargando"></mat-spinner>
+              <span *ngIf="!cargando">Activar 2FA</span>
+            </button>
+            <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- ══ Vista: desactivar 2FA (reautenticación) ═══════════════════════════ -->
+    @if (vista === 'desactivar') {
+      <div class="setup-section warn-section">
+        <h4>Desactivar autenticación de dos factores</h4>
+        <p>Por seguridad, debes confirmar tu identidad ingresando tu <strong>contraseña</strong>
+           y el <strong>código actual</strong> de tu app de autenticación.</p>
+
+        <form [formGroup]="disableForm" (ngSubmit)="confirmarDesactivacion()">
+          <mat-form-field appearance="outline" class="codigo-field">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password"
+                   [type]="hidePassword ? 'password' : 'text'"
+                   id="input-disable-password">
+            <button mat-icon-button matSuffix type="button"
+                    (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="codigo-field">
+            <mat-label>Código 2FA actual</mat-label>
+            <input matInput formControlName="codigo" type="text"
+                   inputmode="numeric" maxlength="6"
+                   placeholder="000000" autocomplete="one-time-code"
+                   id="input-disable-totp">
+            <mat-icon matSuffix>lock</mat-icon>
+            <mat-error *ngIf="disableForm.get('codigo')?.hasError('pattern')">
+              Debe ser exactamente 6 dígitos
+            </mat-error>
+          </mat-form-field>
+
+          <div class="setup-actions">
+            <button mat-raised-button color="warn" type="submit"
+                    [disabled]="disableForm.invalid || cargando" id="btn-confirm-disable-2fa">
+              <mat-spinner diameter="18" *ngIf="cargando"></mat-spinner>
+              <span *ngIf="!cargando">Confirmar desactivación</span>
+            </button>
+            <button mat-button type="button" (click)="cancelar()" id="btn-cancelar-disable">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    }
+
+  </mat-card>
+</div>

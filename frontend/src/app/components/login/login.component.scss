@@ -1,4 +1,4 @@
-.login-container {
+﻿.login-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -40,6 +40,15 @@
   }
 }
 
+.form-step {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
 .full-width {
   width: 100%;
   margin-bottom: 16px;
@@ -64,4 +73,42 @@
     width: 18px;
     height: 18px;
   }
+}
+
+/* ── Paso 2: TOTP ──────────────────────────────────── */
+.totp-step {
+  .totp-header {
+    text-align: center;
+    margin-bottom: 24px;
+
+    .shield-icon {
+      font-size: 52px;
+      width: 52px;
+      height: 52px;
+      color: #1565c0;
+    }
+
+    h2 {
+      margin: 8px 0 6px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+  }
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  color: #666;
+  font-size: 13px;
 }

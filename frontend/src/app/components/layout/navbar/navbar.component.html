@@ -17,7 +17,12 @@
     </button>
 
     <mat-menu #menu="matMenu">
-      <button mat-menu-item (click)="logout()">
+      <button mat-menu-item (click)="irAPerfil()" id="btn-mi-perfil">
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Mi perfil / Seguridad</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()" id="btn-logout">
         <mat-icon>exit_to_app</mat-icon>
         <span>Cerrar sesión</span>
       </button>

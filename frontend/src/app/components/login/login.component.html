@@ -1,5 +1,7 @@
-<div class="login-container">
+﻿<div class="login-container">
   <mat-card class="login-card">
+
+    <!-- ── ENCABEZADO ─────────────────────────────────── -->
     <mat-card-header>
       <div class="login-header">
         <mat-icon class="logo-icon">store</mat-icon>
@@ -9,45 +11,99 @@
     </mat-card-header>
 
     <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Correo electrónico</mat-label>
-          <input matInput formControlName="correo" type="email" placeholder="usuario@techstore.com">
-          <mat-icon matSuffix>email</mat-icon>
-          <mat-error *ngIf="loginForm.get('correo')?.hasError('required')">
-            El correo es requerido
-          </mat-error>
-          <mat-error *ngIf="loginForm.get('correo')?.hasError('email')">
-            Ingrese un correo válido
-          </mat-error>
-        </mat-form-field>
+      <!-- ══ PASO 1: Credenciales ══════════════════════ -->
+      @if (paso === 'credenciales') {
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-step">
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Contraseña</mat-label>
-          <input matInput formControlName="password"
-                 [type]="hidePassword ? 'password' : 'text'">
-          <button mat-icon-button matSuffix type="button"
-                  (click)="hidePassword = !hidePassword">
-            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput formControlName="correo" type="email"
+                   placeholder="usuario@techstore.com" id="input-correo">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('correo')?.hasError('required')">
+              El correo es requerido
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('correo')?.hasError('email')">
+              Ingrese un correo válido
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" id="input-password"
+                   [type]="hidePassword ? 'password' : 'text'">
+            <button mat-icon-button matSuffix type="button"
+                    (click)="hidePassword = !hidePassword">
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              La contraseña es requerida
+            </mat-error>
+          </mat-form-field>
+
+          <div class="error-message" *ngIf="error">
+            <mat-icon>error</mat-icon>
+            <span>{{ error }}</span>
+          </div>
+
+          <button mat-raised-button color="primary" type="submit"
+                  class="full-width login-btn" [disabled]="loading" id="btn-login">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">Iniciar Sesión</span>
           </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-            La contraseña es requerida
-          </mat-error>
-        </mat-form-field>
 
-        <div class="error-message" *ngIf="error">
-          <mat-icon>error</mat-icon>
-          <span>{{ error }}</span>
+        </form>
+      }
+
+      <!-- ══ PASO 2: Código 2FA ═════════════════════════ -->
+      @if (paso === 'totp') {
+        <div class="form-step totp-step">
+
+          <div class="totp-header">
+            <mat-icon class="shield-icon">shield</mat-icon>
+            <h2>Verificación de dos factores</h2>
+            <p>Ingresa el código de 6 dígitos de tu aplicación de autenticación
+              (Google Authenticator, Authy, etc.)</p>
+          </div>
+
+          <form [formGroup]="totpForm" (ngSubmit)="onVerifyTOTP()">
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Código 2FA</mat-label>
+              <input matInput formControlName="codigo" type="text"
+                     inputmode="numeric" maxlength="6"
+                     placeholder="000000" id="input-totp"
+                     autocomplete="one-time-code">
+              <mat-icon matSuffix>lock</mat-icon>
+              <mat-error *ngIf="totpForm.get('codigo')?.hasError('required')">
+                El código es requerido
+              </mat-error>
+              <mat-error *ngIf="totpForm.get('codigo')?.hasError('pattern')">
+                Debe ser exactamente 6 dígitos numéricos
+              </mat-error>
+            </mat-form-field>
+
+            <div class="error-message" *ngIf="error">
+              <mat-icon>error</mat-icon>
+              <span>{{ error }}</span>
+            </div>
+
+            <button mat-raised-button color="primary" type="submit"
+                    class="full-width login-btn" [disabled]="loading" id="btn-verify-totp">
+              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+              <span *ngIf="!loading">Verificar</span>
+            </button>
+
+          </form>
+
+          <button mat-button class="back-btn" (click)="volverAlLogin()" id="btn-back-login">
+            <mat-icon>arrow_back</mat-icon> Volver al inicio de sesión
+          </button>
+
         </div>
+      }
 
-        <button mat-raised-button color="primary" type="submit"
-                class="full-width login-btn" [disabled]="loading">
-          <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-          <span *ngIf="!loading">Iniciar Sesión</span>
-        </button>
-
-      </form>
     </mat-card-content>
   </mat-card>
 </div>

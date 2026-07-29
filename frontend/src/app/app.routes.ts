@@ -64,6 +64,11 @@ export const routes: Routes = [
           import('./components/proveedores/proveedores.component').then(m => m.ProveedoresComponent)
       },
       {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./components/perfil/perfil.component').then(m => m.PerfilComponent)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

@@ -12,11 +12,18 @@ func ConfigurarRutas(r *gin.Engine) {
 	{
 		// Auth (publico)
 		api.POST("/auth/login", handlers.Login)
+		api.POST("/auth/verify-2fa", handlers.VerifyTOTP) // paso 2 del login con 2FA
 
 		// Rutas protegidas
 		protegidas := api.Group("/")
 		protegidas.Use(middleware.AuthRequired())
 		{
+			// Gestion 2FA (requiere JWT completo)
+			protegidas.GET("/auth/2fa/status", handlers.Get2FAStatus)
+			protegidas.GET("/auth/2fa/setup", handlers.Setup2FA)
+			protegidas.POST("/auth/2fa/confirm", handlers.Confirm2FA)
+			protegidas.POST("/auth/2fa/disable", handlers.Disable2FA)
+
 			// Categorías y marcas (auxiliares para formularios)
 			protegidas.GET("/categorias",
 				middleware.RolRequired("Gerente", "Administrador"),
