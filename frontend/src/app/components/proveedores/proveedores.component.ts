@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +13,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProveedoresService, Proveedor, ProveedorRequest } from '../../services/proveedores.service';
 
 @Component({
@@ -21,6 +23,7 @@ import { ProveedoresService, Proveedor, ProveedorRequest } from '../../services/
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatTableModule,
     MatIconModule,
@@ -37,7 +40,7 @@ import { ProveedoresService, Proveedor, ProveedorRequest } from '../../services/
   templateUrl: './proveedores.component.html',
   styleUrl: './proveedores.component.scss'
 })
-export class ProveedoresComponent implements OnInit {
+export class ProveedoresComponent implements OnInit, OnDestroy {
   proveedores: Proveedor[] = [];
   loading = true;
   loadingAccion = false;
@@ -51,6 +54,10 @@ export class ProveedoresComponent implements OnInit {
 
   form: FormGroup;
   displayedColumns = ['id_proveedor', 'razon_social', 'ruc', 'correo', 'telefono', 'contacto_nombre', 'acciones'];
+
+  todosProveedores: Proveedor[] = [];
+  busqueda = '';
+  busquedaSubject = new Subject<string>();
 
   constructor(
     private proveedoresService: ProveedoresService,
@@ -69,6 +76,11 @@ export class ProveedoresComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProveedores();
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => this.aplicarFiltros());
+  }
+
+  ngOnDestroy(): void {
+    this.busquedaSubject.complete();
   }
 
   cargarProveedores(): void {
@@ -77,8 +89,8 @@ export class ProveedoresComponent implements OnInit {
 
     this.proveedoresService.listar().subscribe({
       next: (data) => {
-        this.proveedores = data;
-        this.pageIndex = 0;
+        this.todosProveedores = data;
+        this.aplicarFiltros();
         this.loading = false;
       },
       error: () => {
@@ -86,6 +98,30 @@ export class ProveedoresComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  aplicarFiltros(): void {
+    if (!this.busqueda.trim()) {
+      this.proveedores = this.todosProveedores;
+    } else {
+      const q = this.busqueda.toLowerCase();
+      this.proveedores = this.todosProveedores.filter(p =>
+        p.razon_social.toLowerCase().includes(q) ||
+        (p.ruc || '').toLowerCase().includes(q) ||
+        (p.contacto_nombre || '').toLowerCase().includes(q)
+      );
+    }
+    this.pageIndex = 0;
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.proveedores = this.todosProveedores;
+    this.pageIndex = 0;
+  }
+
+  get filtrosActivos(): boolean {
+    return !!this.busqueda;
   }
 
   abrirCrear(): void {
@@ -124,6 +160,7 @@ export class ProveedoresComponent implements OnInit {
         next: (nuevo) => {
           this.snackBar.open(`Proveedor "${nuevo.razon_social}" creado`, 'Cerrar', { duration: 3000 });
           this.proveedores = [...this.proveedores, nuevo];
+          this.todosProveedores = [...this.todosProveedores, nuevo];
           this.pageIndex = 0;
           this.cancelar();
           this.loadingAccion = false;
@@ -150,13 +187,14 @@ export class ProveedoresComponent implements OnInit {
   }
 
   eliminar(prov: Proveedor): void {
-    if (!confirm(`¿Eliminar proveedor "${prov.razon_social}"?\n\nSi tiene órdenes de compra asociadas, se rechazará la eliminación.`)) return;
+    if (!confirm(`Â¿Eliminar proveedor "${prov.razon_social}"?\n\nSi tiene Ã³rdenes de compra asociadas, se rechazarÃ¡ la eliminaciÃ³n.`)) return;
     this.loadingAccion = true;
 
     this.proveedoresService.eliminar(prov.id_proveedor).subscribe({
       next: () => {
         this.snackBar.open('Proveedor eliminado', 'Cerrar', { duration: 3000 });
         this.proveedores = this.proveedores.filter(p => p.id_proveedor !== prov.id_proveedor);
+        this.todosProveedores = this.todosProveedores.filter(p => p.id_proveedor !== prov.id_proveedor);
         this.pageIndex = 0;
         this.loadingAccion = false;
       },
@@ -181,3 +219,4 @@ export class ProveedoresComponent implements OnInit {
     this.pageSize = event.pageSize;
   }
 }
+

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +10,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Pedido, VentasService } from '../../../services/ventas.service';
 
 @Component({
@@ -17,6 +23,8 @@ import { Pedido, VentasService } from '../../../services/ventas.service';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatTableModule,
     MatIconModule,
@@ -24,12 +32,15 @@ import { Pedido, VentasService } from '../../../services/ventas.service';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule
   ],
   templateUrl: './lista-ventas.component.html',
   styleUrl: './lista-ventas.component.scss'
 })
-export class ListaVentasComponent implements OnInit {
+export class ListaVentasComponent implements OnInit, OnDestroy {
   todasVentas: Pedido[] = [];
   ventas: Pedido[] = [];
   loading = true;
@@ -42,10 +53,22 @@ export class ListaVentasComponent implements OnInit {
 
   readonly filtros = ['Todos', 'Pagado', 'Despachado', 'Entregado', 'Cancelado'];
 
+  busqueda = '';
+  fechaDesde = '';
+  fechaHasta = '';
+  montoMin: number | null = null;
+  montoMax: number | null = null;
+  busquedaSubject = new Subject<string>();
+
   constructor(private ventasService: VentasService) {}
 
   ngOnInit(): void {
     this.cargarVentas();
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => this.aplicarFiltros());
+  }
+
+  ngOnDestroy(): void {
+    this.busquedaSubject.complete();
   }
 
   cargarVentas(): void {
@@ -55,7 +78,7 @@ export class ListaVentasComponent implements OnInit {
     this.ventasService.listarVentas().subscribe({
       next: (data) => {
         this.todasVentas = data;
-        this.aplicarFiltro(this.filtroActivo);
+        this.aplicarFiltros();
         this.loading = false;
       },
       error: () => {
@@ -67,10 +90,53 @@ export class ListaVentasComponent implements OnInit {
 
   aplicarFiltro(estado: string): void {
     this.filtroActivo = estado;
-    this.ventas = estado === 'Todos'
-      ? this.todasVentas
-      : this.todasVentas.filter(v => v.estado === estado);
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltros(): void {
+    let resultado = this.todasVentas;
+    
+    // Estado chip filter
+    if (this.filtroActivo !== 'Todos') {
+      resultado = resultado.filter(v => v.estado === this.filtroActivo);
+    }
+    
+    // Text search: client or employee name
+    if (this.busqueda.trim()) {
+      const q = this.busqueda.toLowerCase();
+      resultado = resultado.filter(v =>
+        v.cliente.toLowerCase().includes(q) ||
+        v.empleado.toLowerCase().includes(q)
+      );
+    }
+    
+    // Amount range
+    if (this.montoMin !== null) {
+      resultado = resultado.filter(v => v.total >= this.montoMin!);
+    }
+    if (this.montoMax !== null) {
+      resultado = resultado.filter(v => v.total <= this.montoMax!);
+    }
+    
+    this.ventas = resultado;
     this.pageIndex = 0;
+  }
+
+  limpiarFiltros(): void {
+    this.filtroActivo = 'Todos';
+    this.busqueda = '';
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.montoMin = null;
+    this.montoMax = null;
+    this.ventas = this.todasVentas;
+    this.pageIndex = 0;
+  }
+
+  get filtrosActivos(): boolean {
+    return this.filtroActivo !== 'Todos' || !!this.busqueda ||
+      !!this.fechaDesde || !!this.fechaHasta ||
+      this.montoMin !== null || this.montoMax !== null;
   }
 
   getTotalVentas(): number {
@@ -113,3 +179,4 @@ export class ListaVentasComponent implements OnInit {
     this.pageSize = event.pageSize;
   }
 }
+

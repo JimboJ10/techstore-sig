@@ -101,6 +101,46 @@
       <mat-card-header>
         <mat-card-title>Ordenes de Compra</mat-card-title>
       </mat-card-header>
+
+      <!-- Panel de filtros -->
+      <div class="filtros-panel">
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar producto o proveedor</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Escribe para buscar...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+            <mat-option value="">Todos</mat-option>
+            @for (e of estadosBPM; track e) {
+              <mat-option [value]="e">{{ e }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Proveedor</mat-label>
+          <mat-select [(ngModel)]="filtroProveedor" (ngModelChange)="aplicarFiltros()">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (prov of proveedores; track prov.id_proveedor) {
+              <mat-option [value]="prov.id_proveedor">{{ prov.razon_social }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+
+        <span class="filtro-resultado">{{ procesos.length }} resultado(s)</span>
+      </div>
+
       <mat-card-content>
         <table mat-table [dataSource]="procesosPaginados" class="full-width">
           <ng-container matColumnDef="id_proceso">
@@ -185,3 +225,4 @@
     </mat-card>
   }
 </div>
+

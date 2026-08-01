@@ -64,7 +64,7 @@
           <mat-icon class="tab-icon">sensors</mat-icon>
           Lecturas IoT
           @if (!loadingLecturas) {
-            <span class="tab-badge">{{ lecturas.length }}</span>
+            <span class="tab-badge">{{ todasLecturas.length }}</span>
           }
         </ng-template>
 
@@ -85,6 +85,33 @@
             <p class="empty-hint">Node-RED enviará lecturas automáticamente cuando el lector escanee un código.</p>
           </div>
         } @else {
+          <!-- ── Panel de filtros lecturas ── -->
+          <div class="filtros-panel">
+            <mat-form-field appearance="outline" class="filtro-campo">
+              <mat-label>Buscar producto o código</mat-label>
+              <input matInput [(ngModel)]="busquedaLecturas"
+                     (input)="busquedaLecturasSubject.next($any($event.target).value)"
+                     placeholder="Buscar...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+              <mat-label>Tipo de evento</mat-label>
+              <mat-select [(ngModel)]="filtroTipoEvento" (ngModelChange)="aplicarFiltrosLecturas()">
+                <mat-option value="">Todos</mat-option>
+                <mat-option value="Despacho">Despacho</mat-option>
+                <mat-option value="Recepcion">Recepción</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            @if (filtrosLecturasActivos) {
+              <button mat-stroked-button color="warn" (click)="limpiarFiltrosLecturas()" class="btn-limpiar">
+                <mat-icon>filter_alt_off</mat-icon> Limpiar
+              </button>
+            }
+            <span class="filtro-resultado">{{ lecturas.length }} resultado(s)</span>
+          </div>
+
           <div class="table-wrapper">
             <table mat-table [dataSource]="lecturasPaginadas" class="iot-table">
               <ng-container matColumnDef="id_lectura">
@@ -173,6 +200,24 @@
             <p class="empty-hint">Todos los pedidos han sido despachados.</p>
           </div>
         } @else {
+          <!-- ── Panel de filtros envios ── -->
+          <div class="filtros-panel">
+            <mat-form-field appearance="outline" class="filtro-campo">
+              <mat-label>Buscar cliente, producto o código</mat-label>
+              <input matInput [(ngModel)]="busquedaEnvios"
+                     (input)="busquedaEnviosSubject.next($any($event.target).value)"
+                     placeholder="Buscar envío...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            @if (busquedaEnvios) {
+              <button mat-stroked-button color="warn" (click)="limpiarFiltrosEnvios()" class="btn-limpiar">
+                <mat-icon>filter_alt_off</mat-icon> Limpiar
+              </button>
+            }
+            <span class="filtro-resultado">{{ envios.length }} resultado(s)</span>
+          </div>
+
           <div class="table-wrapper">
             <table mat-table [dataSource]="enviosPaginados" class="iot-table">
               <ng-container matColumnDef="id_envio">

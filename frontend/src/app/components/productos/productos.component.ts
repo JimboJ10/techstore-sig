@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +27,7 @@ import {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatTableModule,
     MatIconModule,
@@ -42,10 +45,18 @@ import {
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.scss'
 })
-export class ProductosComponent implements OnInit {
+export class ProductosComponent implements OnInit, OnDestroy {
+  todosProductos: Producto[] = [];
   productos: Producto[] = [];
   categorias: Categoria[] = [];
   marcas: Marca[] = [];
+
+  // Filtros
+  busqueda = '';
+  filtroCategoria: number | null = null;
+  filtroMarca: number | null = null;
+  soloStockCritico = false;
+  busquedaSubject = new Subject<string>();
 
   loading = true;
   loadingAccion = false;
@@ -97,8 +108,12 @@ export class ProductosComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe(() => this.aplicarFiltros());
     this.cargarTodo();
   }
+
+  ngOnDestroy(): void { this.busquedaSubject.complete(); }
 
   cargarTodo(): void {
     this.loading = true;
@@ -109,8 +124,8 @@ export class ProductosComponent implements OnInit {
 
     this.productosService.listar().subscribe({
       next: (data) => {
-        this.productos = data;
-        this.pageIndex = 0;
+        this.todosProductos = data;
+        this.aplicarFiltros();
         this.loading = false;
       },
       error: () => {
@@ -229,5 +244,44 @@ export class ProductosComponent implements OnInit {
   cambiarPagina(event: PageEvent): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
+  }
+
+  // ── Filtros ────────────────────────────────────────────────────────────────
+  aplicarFiltros(): void {
+    let resultado = this.todosProductos;
+
+    if (this.busqueda.trim()) {
+      const q = this.busqueda.toLowerCase();
+      resultado = resultado.filter(p => p.nombre_producto.toLowerCase().includes(q));
+    }
+
+    if (this.filtroCategoria !== null) {
+      resultado = resultado.filter(p => p.id_categoria === this.filtroCategoria);
+    }
+
+    if (this.filtroMarca !== null) {
+      resultado = resultado.filter(p => p.id_marca === this.filtroMarca);
+    }
+
+    if (this.soloStockCritico) {
+      resultado = resultado.filter(p => p.stock_actual < p.stock_minimo);
+    }
+
+    this.productos = resultado;
+    this.pageIndex = 0;
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.filtroCategoria = null;
+    this.filtroMarca = null;
+    this.soloStockCritico = false;
+    this.productos = this.todosProductos;
+    this.pageIndex = 0;
+  }
+
+  get filtrosActivos(): boolean {
+    return !!this.busqueda || this.filtroCategoria !== null ||
+      this.filtroMarca !== null || this.soloStockCritico;
   }
 }

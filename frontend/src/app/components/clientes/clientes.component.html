@@ -103,8 +103,27 @@
         </button>
       </div>
     } @else {
+      <!-- ── Panel de filtros ── -->
+      <div class="filtros-panel">
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar por nombre, correo o teléfono</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Buscar cliente...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+
+        <span class="filtro-resultado">{{ clientes.length }} resultado(s)</span>
+      </div>
+
       <div class="table-meta">
-        <span class="total-label">{{ clientes.length }} clientes registrados</span>
+        <span class="total-label">{{ todosClientes.length }} clientes registrados</span>
       </div>
       <div class="table-wrapper">
         <table mat-table [dataSource]="clientesPaginados" class="clientes-table">

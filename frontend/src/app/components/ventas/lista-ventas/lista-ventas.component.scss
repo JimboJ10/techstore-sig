@@ -87,26 +87,18 @@
   }
 }
 
-.filtros-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+/* New advanced filter panel card */
+.filtros-card {
+  margin-bottom: 20px;
+  mat-card-content { padding: 0 !important; }
 }
 
-.filtros-label {
-  font-size: 13px;
-  color: #888;
-  white-space: nowrap;
+.filtro-fecha {
+  min-width: 140px !important;
+  max-width: 180px !important;
 }
 
-.filtros-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.filtro-monto {
+  min-width: 120px !important;
+  max-width: 150px !important;
 }
-
-.filtros-chips button.activo {
-  font-weight: 600;
-}

@@ -2,3 +2,63 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ════════════════════════════════════════════════════════
+   FILTROS PANEL — Shared across all table modules
+   ════════════════════════════════════════════════════════ */
+.filtros-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 16px 0;
+  background: #f8f9ff;
+  border-bottom: 1px solid #e8eaf6;
+  margin-bottom: 0;
+
+  .filtro-campo {
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+    font-size: 14px;
+  }
+
+  .filtro-select {
+    min-width: 160px;
+    max-width: 200px;
+  }
+
+  .btn-limpiar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    height: 40px;
+  }
+
+  .btn-criticos {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    height: 40px;
+  }
+
+  .filtro-resultado {
+    margin-left: auto;
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}
+
+/* Fila crítica resaltada en inventario */
+.fila-critica {
+  background-color: #fff3e0 !important;
+}
+
+.stock-bajo {
+  color: #e65100;
+  font-weight: 700;
+}

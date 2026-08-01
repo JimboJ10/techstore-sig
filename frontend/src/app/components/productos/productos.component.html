@@ -207,8 +207,47 @@
         </button>
       </div>
     } @else {
+      <!-- ── Panel de filtros ── -->
+      <div class="filtros-panel">
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar producto</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Nombre del producto...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Categoría</mat-label>
+          <mat-select [(ngModel)]="filtroCategoria" (ngModelChange)="aplicarFiltros()">
+            <mat-option [value]="null">Todas</mat-option>
+            @for (cat of categorias; track cat.id_categoria) {
+              <mat-option [value]="cat.id_categoria">{{ cat.nombre_categoria }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Marca</mat-label>
+          <mat-select [(ngModel)]="filtroMarca" (ngModelChange)="aplicarFiltros()">
+            <mat-option [value]="null">Todas</mat-option>
+            @for (m of marcas; track m.id_marca) {
+              <mat-option [value]="m.id_marca">{{ m.nombre_marca }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+
+        <span class="filtro-resultado">{{ productos.length }} resultado(s)</span>
+      </div>
+
       <div class="table-meta">
-        <span>{{ productos.length }} productos activos</span>
+        <span>{{ todosProductos.length }} productos activos</span>
       </div>
       <div class="table-wrapper">
         <table mat-table [dataSource]="productosPaginados" class="productos-table">

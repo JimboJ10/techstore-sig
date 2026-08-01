@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ClientesService, Cliente, PedidoHistorial } from '../../services/clientes.service';
 
 @Component({
@@ -22,6 +24,7 @@ import { ClientesService, Cliente, PedidoHistorial } from '../../services/client
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatTableModule,
     MatIconModule,
@@ -39,7 +42,7 @@ import { ClientesService, Cliente, PedidoHistorial } from '../../services/client
   templateUrl: './clientes.component.html',
   styleUrl: './clientes.component.scss'
 })
-export class ClientesComponent implements OnInit {
+export class ClientesComponent implements OnInit, OnDestroy {
   clientes: Cliente[] = [];
   loading = true;
   loadingCrear = false;
@@ -59,6 +62,10 @@ export class ClientesComponent implements OnInit {
   displayedColumns = ['id_cliente', 'nombres', 'apellidos', 'correo', 'telefono', 'direccion', 'acciones'];
   displayedColumnsHistorial = ['id_pedido', 'fecha_pedido', 'estado', 'total'];
 
+  todosClientes: Cliente[] = [];
+  busqueda = '';
+  busquedaSubject = new Subject<string>();
+
   constructor(
     private clientesService: ClientesService,
     private fb: FormBuilder,
@@ -75,6 +82,11 @@ export class ClientesComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarClientes();
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => this.aplicarFiltros());
+  }
+
+  ngOnDestroy(): void {
+    this.busquedaSubject.complete();
   }
 
   cargarClientes(): void {
@@ -82,8 +94,8 @@ export class ClientesComponent implements OnInit {
     this.error = '';
     this.clientesService.listar().subscribe({
       next: (data) => {
-        this.clientes = data;
-        this.pageIndex = 0;
+        this.todosClientes = data;
+        this.aplicarFiltros();
         this.loading = false;
       },
       error: () => {
@@ -93,6 +105,30 @@ export class ClientesComponent implements OnInit {
     });
   }
 
+  aplicarFiltros(): void {
+    if (!this.busqueda.trim()) {
+      this.clientes = this.todosClientes;
+    } else {
+      const q = this.busqueda.toLowerCase();
+      this.clientes = this.todosClientes.filter(c =>
+        `${c.nombres} ${c.apellidos}`.toLowerCase().includes(q) ||
+        (c.correo || '').toLowerCase().includes(q) ||
+        (c.telefono || '').toLowerCase().includes(q)
+      );
+    }
+    this.pageIndex = 0;
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.clientes = this.todosClientes;
+    this.pageIndex = 0;
+  }
+
+  get filtrosActivos(): boolean {
+    return !!this.busqueda;
+  }
+
   crearCliente(): void {
     if (this.nuevoClienteForm.invalid) return;
     this.loadingCrear = true;
@@ -100,6 +136,7 @@ export class ClientesComponent implements OnInit {
     this.clientesService.crear(this.nuevoClienteForm.value).subscribe({
       next: (nuevo) => {
         this.clientes = [...this.clientes, nuevo];
+        this.todosClientes = [...this.todosClientes, nuevo];
         this.pageIndex = 0;
         this.snackBar.open(`Cliente ${nuevo.nombres} ${nuevo.apellidos} creado`, 'Cerrar', { duration: 3000 });
         this.mostrarFormulario = false;
@@ -115,7 +152,7 @@ export class ClientesComponent implements OnInit {
 
   verHistorial(cliente: Cliente): void {
     if (this.clienteSeleccionado?.id_cliente === cliente.id_cliente) {
-      // Toggle: ocultar si ya está abierto
+      // Toggle: ocultar si ya estÃ¡ abierto
       this.clienteSeleccionado = null;
       this.historial = [];
       return;
@@ -177,3 +214,4 @@ export class ClientesComponent implements OnInit {
     this.historialPageSize = event.pageSize;
   }
 }
+

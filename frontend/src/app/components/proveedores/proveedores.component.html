@@ -104,8 +104,27 @@
         </button>
       </div>
     } @else {
+      <!-- ── Panel de filtros ── -->
+      <div class="filtros-panel">
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar por razón social, RUC o contacto</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Buscar proveedor...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+
+        <span class="filtro-resultado">{{ proveedores.length }} resultado(s)</span>
+      </div>
+
       <div class="table-meta">
-        <span>{{ proveedores.length }} proveedores registrados</span>
+        <span>{{ todosProveedores.length }} proveedores registrados</span>
       </div>
       <div class="table-wrapper">
         <table mat-table [dataSource]="proveedoresPaginados" class="proveedores-table">

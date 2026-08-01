@@ -41,20 +41,51 @@
       </mat-card>
     </div>
 
-    <!-- Filtros por estado -->
-    <div class="filtros-row">
-      <span class="filtros-label">Filtrar:</span>
-      <div class="filtros-chips">
-        @for (f of filtros; track f) {
-          <button mat-stroked-button
-                  [class.activo]="filtroActivo === f"
-                  [color]="filtroActivo === f ? 'primary' : ''"
-                  (click)="aplicarFiltro(f)">
-            {{ f }} ({{ contarPorEstado(f) }})
+    <!-- ── Panel de filtros avanzados ─────────────────────────────────────── -->
+    <mat-card class="filtros-card">
+      <div class="filtros-panel">
+        <!-- Búsqueda por texto -->
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar cliente o empleado</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Nombre...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Estado -->
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtroActivo" (ngModelChange)="aplicarFiltros()">
+            @for (f of filtros; track f) {
+              <mat-option [value]="f">{{ f }} ({{ contarPorEstado(f) }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Monto mín -->
+        <mat-form-field appearance="outline" class="filtro-campo filtro-monto">
+          <mat-label>Monto mín.</mat-label>
+          <input matInput type="number" [(ngModel)]="montoMin" (ngModelChange)="aplicarFiltros()" min="0">
+          <span matPrefix>$&nbsp;</span>
+        </mat-form-field>
+
+        <!-- Monto máx -->
+        <mat-form-field appearance="outline" class="filtro-campo filtro-monto">
+          <mat-label>Monto máx.</mat-label>
+          <input matInput type="number" [(ngModel)]="montoMax" (ngModelChange)="aplicarFiltros()" min="0">
+          <span matPrefix>$&nbsp;</span>
+        </mat-form-field>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
           </button>
         }
+
+        <span class="filtro-resultado">{{ ventas.length }} resultado(s)</span>
       </div>
-    </div>
+    </mat-card>
 
     <mat-card class="tabla-card">
       <mat-card-header>

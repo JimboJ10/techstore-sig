@@ -1,4 +1,4 @@
-<div class="inventario-container">
+﻿<div class="inventario-container">
   <div class="page-header">
     <h2 class="page-title">Catálogo e Inventario</h2>
     <button mat-raised-button color="primary" (click)="cargarInventario()">
@@ -12,13 +12,14 @@
   </div>
 
   @if (!loading) {
+    <!-- KPIs siempre sobre el total real, no el filtrado -->
     <div class="resumen-grid">
       <mat-card class="resumen-card">
         <mat-card-content>
           <mat-icon color="primary">inventory_2</mat-icon>
           <div>
-            <span class="resumen-valor">{{ inventario.length }}</span>
-            <span class="resumen-label">Productos</span>
+            <span class="resumen-valor">{{ todoInventario.length }}</span>
+            <span class="resumen-label">Productos totales</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -48,6 +49,44 @@
       <mat-card-header>
         <mat-card-title>Estado del inventario</mat-card-title>
       </mat-card-header>
+
+      <!-- ── Panel de filtros ── -->
+      <div class="filtros-panel">
+        <mat-form-field appearance="outline" class="filtro-campo">
+          <mat-label>Buscar producto</mat-label>
+          <input matInput [(ngModel)]="busqueda"
+                 (input)="busquedaSubject.next($any($event.target).value)"
+                 placeholder="Nombre del producto...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-campo filtro-select">
+          <mat-label>Ubicación</mat-label>
+          <mat-select [(ngModel)]="filtroUbicacion" (ngModelChange)="aplicarFiltros()">
+            <mat-option value="">Todas</mat-option>
+            @for (u of ubicaciones; track u) {
+              <mat-option [value]="u">{{ u }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button
+                [color]="soloCriticos ? 'warn' : ''"
+                (click)="soloCriticos = !soloCriticos; aplicarFiltros()"
+                class="btn-criticos">
+          <mat-icon>{{ soloCriticos ? 'warning' : 'warning_amber' }}</mat-icon>
+          {{ soloCriticos ? 'Solo críticos ✓' : 'Solo críticos' }}
+        </button>
+
+        @if (filtrosActivos) {
+          <button mat-stroked-button color="warn" (click)="limpiarFiltros()" class="btn-limpiar">
+            <mat-icon>filter_alt_off</mat-icon> Limpiar
+          </button>
+        }
+
+        <span class="filtro-resultado">{{ inventario.length }} resultado(s)</span>
+      </div>
+
       <mat-card-content>
         <table mat-table [dataSource]="inventarioPaginado" class="full-width">
 
@@ -95,6 +134,12 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"
               [class.fila-critica]="row.stock_actual < row.stock_minimo"></tr>
         </table>
+
+        <div *ngIf="inventario.length === 0 && !loading" class="empty-state">
+          <mat-icon>inventory_2</mat-icon>
+          <p>No se encontraron productos con los filtros aplicados.</p>
+        </div>
+
         <mat-paginator
           [length]="inventario.length"
           [pageSize]="pageSize"
