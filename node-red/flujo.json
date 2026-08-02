@@ -1,0 +1,235 @@
+[
+    {
+        "id": "a8a6b815dc46f21a",
+        "type": "tab",
+        "label": "TechStore IoT",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "624cc5062cb75058",
+        "type": "ui_template",
+        "z": "a8a6b815dc46f21a",
+        "group": "techstore_iot_group",
+        "name": "Instrucciones",
+        "order": 1,
+        "width": "12",
+        "height": "4",
+        "format": "<div style=\"padding:12px; border-radius:8px; background:#f5f7fb; border:1px solid #d9e2f3; font-family:Arial;\">\n  <h3 style=\"margin:0 0 8px 0;\">TechStore IoT</h3>\n  <div style=\"line-height:1.6;\">\n    <div><b>Despacho</b>: codigo_leido = DELL-INS-3520, id_envio = 2</div>\n    <div><b>Recepción</b>: codigo_leido = DELL-INS-3520, id_envio = 2</div>\n    <div><b>Dispositivo</b>: 1</div>\n  </div>\n</div>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 250,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "aef35ddd1d762606",
+        "type": "ui_button",
+        "z": "a8a6b815dc46f21a",
+        "name": "Simular despacho",
+        "group": "techstore_iot_group",
+        "order": 2,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "label": "Simular despacho",
+        "tooltip": "",
+        "color": "#ffffff",
+        "bgcolor": "#1565c0",
+        "className": "",
+        "icon": "local_shipping",
+        "payload": "despacho",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 160,
+        "y": 170,
+        "wires": [
+            [
+                "6bd7235c64dc3446"
+            ]
+        ]
+    },
+    {
+        "id": "6bd7235c64dc3446",
+        "type": "function",
+        "z": "a8a6b815dc46f21a",
+        "name": "Armar JSON despacho",
+        "func": "msg.headers = {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoxLCJpZF9lbXBsZWFkbyI6MSwicm9sIjoiR2VyZW50ZSIsImV4cCI6MTc4MzIzODQ2OSwiaWF0IjoxNzgzMjA5NjY5fQ.Y-Sf2quX8ZARZdTgef3QOZc2v2_saxrBUMFFQAGPl6o\"\n};\n\nmsg.payload = {\n    id_dispositivo: 1,\n    codigo_leido: \"DELL-INS-3520\",\n    tipo_evento: \"Despacho\",\n    id_envio: 6,\n    timestamp: new Date().toISOString()\n};\n\nmsg.action = \"Despacho\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 170,
+        "wires": [
+            [
+                "6cc9d427559bb5c4"
+            ]
+        ]
+    },
+    {
+        "id": "6dfacddffc0c3057",
+        "type": "ui_button",
+        "z": "a8a6b815dc46f21a",
+        "name": "Simular recepcion",
+        "group": "techstore_iot_group",
+        "order": 3,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "label": "Simular recepción",
+        "tooltip": "",
+        "color": "#ffffff",
+        "bgcolor": "#2e7d32",
+        "icon": "inventory_2",
+        "payload": "recepcion",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 170,
+        "y": 230,
+        "wires": [
+            [
+                "134ead50f6ecc369"
+            ]
+        ]
+    },
+    {
+        "id": "134ead50f6ecc369",
+        "type": "function",
+        "z": "a8a6b815dc46f21a",
+        "name": "Armar JSON recepcion",
+        "func": "msg.headers = {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c3VhcmlvIjoxLCJpZF9lbXBsZWFkbyI6MSwicm9sIjoiR2VyZW50ZSIsImV4cCI6MTc4MzIzODQ2OSwiaWF0IjoxNzgzMjA5NjY5fQ.Y-Sf2quX8ZARZdTgef3QOZc2v2_saxrBUMFFQAGPl6o\"\n};\nmsg.payload = {\n    id_dispositivo: 1,\n    codigo_leido: \"DELL-INS-3520\",\n    tipo_evento: \"Recepcion\",\n    id_envio: 6,\n    timestamp: new Date().toISOString()\n};\nmsg.action = \"Recepcion\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 230,
+        "wires": [
+            [
+                "6cc9d427559bb5c4"
+            ]
+        ]
+    },
+    {
+        "id": "6cc9d427559bb5c4",
+        "type": "http request",
+        "z": "a8a6b815dc46f21a",
+        "name": "POST /api/iot/lectura",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.100.10:8080/api/iot/lectura",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 640,
+        "y": 200,
+        "wires": [
+            [
+                "7e5d1fb7033d1726",
+                "e1f8cd0eac34a061"
+            ]
+        ]
+    },
+    {
+        "id": "7e5d1fb7033d1726",
+        "type": "function",
+        "z": "a8a6b815dc46f21a",
+        "name": "Formatear respuesta",
+        "func": "var accion = msg.action || \"Operacion\";\nvar data = msg.payload || {};\n\nif (msg.statusCode && msg.statusCode >= 400) {\n    msg.payload = accion + \" ERROR - \" + (data.error || (\"HTTP \" + msg.statusCode));\n} else if (data && data.mensaje) {\n    msg.payload = accion + \" OK - \" + data.mensaje;\n} else {\n    msg.payload = accion + \" - Respuesta recibida\";\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 200,
+        "wires": [
+            [
+                "ab878ec61075b46d"
+            ]
+        ]
+    },
+    {
+        "id": "ab878ec61075b46d",
+        "type": "ui_template",
+        "z": "a8a6b815dc46f21a",
+        "group": "techstore_iot_group",
+        "name": "Resultado visual",
+        "order": 4,
+        "width": "12",
+        "height": "3",
+        "format": "<div style=\"padding:12px; border-radius:8px; background:#fff; border:1px solid #cfd8dc; font-family:Arial;\">\n  <h3 style=\"margin:0 0 8px 0;\">Última respuesta</h3>\n  <div style=\"font-size:15px; line-height:1.6;\">{{msg.payload}}</div>\n</div>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1080,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e1f8cd0eac34a061",
+        "type": "debug",
+        "z": "a8a6b815dc46f21a",
+        "name": "Respuesta API",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "techstore_iot_group",
+        "type": "ui_group",
+        "name": "Pruebas IoT",
+        "tab": "techstore_iot_tab_cfg",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "techstore_iot_tab_cfg",
+        "type": "ui_tab",
+        "name": "TechStore IoT",
+        "icon": "scanner",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "5f376cef17de7ec1",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
